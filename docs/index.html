@@ -239,9 +239,44 @@
       font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
       font-size: 0.95rem;
       color: var(--green);
-      max-width: 500px;
+      max-width: 600px;
       margin: 16px auto 0;
       text-align: center;
+    }
+
+    /* Install grid */
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .install-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .install-card:hover { border-color: var(--accent); }
+    .install-card .editor-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .install-card .editor-source {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .install-card .btn { width: 100%; justify-content: center; font-size: 0.9rem; padding: 10px 16px; }
+    .install-card .cmd {
+      margin-top: 8px;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      word-break: break-all;
     }
 
     /* Footer */
@@ -429,14 +464,36 @@
   <section>
     <div class="container">
       <h2>Instalación</h2>
-      <div class="cta-group">
-        <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai" class="btn btn-primary">
-          Instalar desde el Marketplace
-        </a>
+      <p style="text-align:center; color: var(--text-muted); margin-bottom: 8px;">Disponible en todos los editores compatibles con extensiones de VS Code.</p>
+
+      <div class="install-grid">
+        <div class="install-card">
+          <div class="editor-name">VS Code</div>
+          <div class="editor-source">VS Marketplace</div>
+          <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai" class="btn btn-primary">Instalar</a>
+          <div class="cmd">code --install-extension apliarte.apliarte-ai</div>
+        </div>
+        <div class="install-card">
+          <div class="editor-name">Cursor</div>
+          <div class="editor-source">Open VSX</div>
+          <a href="https://open-vsx.org/extension/apliarte/apliarte-ai" class="btn btn-primary">Instalar</a>
+          <div class="cmd">Buscar "ApliArte AI" en extensiones</div>
+        </div>
+        <div class="install-card">
+          <div class="editor-name">Windsurf</div>
+          <div class="editor-source">Open VSX</div>
+          <a href="https://open-vsx.org/extension/apliarte/apliarte-ai" class="btn btn-primary">Instalar</a>
+          <div class="cmd">Buscar "ApliArte AI" en extensiones</div>
+        </div>
+        <div class="install-card">
+          <div class="editor-name">Antigravity</div>
+          <div class="editor-source">Open VSX</div>
+          <a href="https://open-vsx.org/extension/apliarte/apliarte-ai" class="btn btn-primary">Instalar</a>
+          <div class="cmd">Buscar "ApliArte AI" en extensiones</div>
+        </div>
       </div>
-      <div class="install-cmd">
-        code --install-extension apliarte.apliarte-ai
-      </div>
+
+      <p style="text-align:center; color: var(--text-muted); margin-top: 24px; font-size: 0.85rem;">También compatible con VS Codium, Theia y cualquier editor basado en Open VSX.</p>
     </div>
   </section>
 
@@ -446,7 +503,8 @@
       <p>
         Hecho por <a href="https://github.com/erbolamm">Javier Mateo (ApliArte)</a> &middot;
         <a href="https://github.com/erbolamm/apliarte-ai">GitHub</a> &middot;
-        <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">Marketplace</a> &middot;
+        <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">VS Marketplace</a> &middot;
+        <a href="https://open-vsx.org/extension/apliarte/apliarte-ai">Open VSX</a> &middot;
         <a href="https://github.com/erbolamm/apliarte-ai/blob/main/LICENSE">MIT License</a>
       </p>
     </div>
