@@ -208,6 +208,17 @@ ApliArte AI no envía datos a ningún servidor externo. Todo el procesamiento oc
 
 ---
 
+## Compatibilidad
+
+- VS Code >= 1.93.0
+- Cursor AI
+- Windsurf IDE
+- Antigravity
+- VS Codium
+- Windows / macOS / Linux
+
+---
+
 ## Contribuir
 
 Las contribuciones son bienvenidas. Abrí un [issue](https://github.com/erbolamm/apliarte-ai/issues) o un [pull request](https://github.com/erbolamm/apliarte-ai/pulls).
@@ -224,8 +235,92 @@ npm run watch   # Desarrollo con hot-reload
 
 ## Autor
 
-**Javier Mateo (ApliArte)** — [github.com/erbolamm](https://github.com/erbolamm)
+Javier Mateo (ApliArte) — [github.com/erbolamm](https://github.com/erbolamm)
+
+## 💬 Una nota personal del autor / A personal note from the author
+
+> ℹ️ Nota: El texto siguiente es un mensaje personal del autor, escrito en varios idiomas para que pueda leerlo gente de todo el mundo. Esto no implica que el proyecto tenga soporte funcional completo en esos idiomas.
+
+> ℹ️ Note: The text below is a personal message from the author, written in several languages so people around the world can read it. This does not imply full multilingual feature support in those languages.
+
+<details>
+<summary>🇪🇸 Español</summary>
+
+ApliArte AI nació de una frustración: todas las extensiones de IA para VS Code te piden una API key de pago o envían tu código a servidores externos. Yo quería algo que funcionara en MI máquina, con MIS modelos, sin depender de nadie.
+
+Con transformers.js v4 conseguí que los modelos corran directamente dentro de VS Code — sin instalar LM Studio, sin Ollama, sin nada. Un click y funciona. Tu código nunca sale de tu ordenador.
+
+Si sos desarrollador y valorás tu privacidad, esta herramienta es para vos. Es gratis, es open source, y siempre lo será.
+
+</details>
+
+<details>
+<summary>🇬🇧 English</summary>
+
+ApliArte AI was born out of frustration: every AI extension for VS Code requires a paid API key or sends your code to external servers. I wanted something that runs on MY machine, with MY models, without depending on anyone.
+
+With transformers.js v4, I made models run directly inside VS Code — no LM Studio, no Ollama, nothing to install. One click and it works. Your code never leaves your computer.
+
+If you're a developer who values privacy, this tool is for you. It's free, it's open source, and it always will be.
+
+</details>
+
+<details>
+<summary>🇧🇷 Português</summary>
+
+ApliArte AI nasceu de uma frustração: todas as extensões de IA para VS Code pedem uma API key paga ou enviam seu código para servidores externos. Eu queria algo que rodasse na MINHA máquina, com MEUS modelos, sem depender de ninguém.
+
+Com transformers.js v4, consegui que os modelos rodem diretamente dentro do VS Code — sem instalar LM Studio, sem Ollama, sem nada. Um clique e funciona. Seu código nunca sai do seu computador.
+
+Se você é desenvolvedor e valoriza sua privacidade, essa ferramenta é para você. É grátis, é open source, e sempre será.
+
+</details>
+
+<details>
+<summary>🇫🇷 Français</summary>
+
+ApliArte AI est né d'une frustration : toutes les extensions IA pour VS Code demandent une clé API payante ou envoient votre code vers des serveurs externes. Je voulais quelque chose qui tourne sur MA machine, avec MES modèles, sans dépendre de personne.
+
+Avec transformers.js v4, j'ai fait tourner les modèles directement dans VS Code — pas de LM Studio, pas d'Ollama, rien à installer. Un clic et ça marche. Votre code ne quitte jamais votre ordinateur.
+
+Si vous êtes développeur et que vous tenez à votre vie privée, cet outil est pour vous. C'est gratuit, c'est open source, et ça le restera toujours.
+
+</details>
+
+<details>
+<summary>🇩🇪 Deutsch</summary>
+
+ApliArte AI entstand aus Frustration: Jede KI-Erweiterung für VS Code verlangt einen kostenpflichtigen API-Schlüssel oder sendet Ihren Code an externe Server. Ich wollte etwas, das auf MEINEM Computer läuft, mit MEINEN Modellen, ohne von irgendjemandem abhängig zu sein.
+
+Mit transformers.js v4 laufen die Modelle direkt in VS Code — kein LM Studio, kein Ollama, nichts zu installieren. Ein Klick und es funktioniert. Ihr Code verlässt niemals Ihren Computer.
+
+Wenn Sie Entwickler sind und Ihre Privatsphäre schätzen, ist dieses Tool für Sie. Es ist kostenlos, es ist Open Source, und das wird es immer bleiben.
+
+</details>
+
+<details>
+<summary>🇮🇹 Italiano</summary>
+
+ApliArte AI è nato da una frustrazione: tutte le estensioni IA per VS Code richiedono una chiave API a pagamento o inviano il tuo codice a server esterni. Volevo qualcosa che funzionasse sulla MIA macchina, con i MIEI modelli, senza dipendere da nessuno.
+
+Con transformers.js v4, ho fatto funzionare i modelli direttamente dentro VS Code — niente LM Studio, niente Ollama, niente da installare. Un click e funziona. Il tuo codice non lascia mai il tuo computer.
+
+Se sei uno sviluppatore e tieni alla tua privacy, questo strumento è per te. È gratuito, è open source, e lo sarà sempre.
+
+</details>
+
+## 💖 Apoya el proyecto
+
+Herramienta gratuita y open source. Si te ahorra tiempo, un café ayuda a mantener el desarrollo.
+
+| Plataforma | Enlace |
+|-----------|--------|
+| PayPal | [paypal.me/erbolamm](https://paypal.me/erbolamm) |
+| Ko-fi | [ko-fi.com/C0C11TWR1K](https://ko-fi.com/C0C11TWR1K) |
+| Twitch Tip | [streamelements.com/apliarte/tip](https://streamelements.com/apliarte/tip) |
+
+🌐 [Sitio oficial](https://erbolamm.github.io/apliarte-ai/) · 📦 [GitHub](https://github.com/erbolamm/apliarte-ai)
 
 ## Licencia
 
-[MIT](LICENSE)
+MIT — © 2026 ApliArte
