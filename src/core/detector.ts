@@ -13,7 +13,7 @@ export interface LocalProvider {
  * Intenta conectarse a los endpoints configurados y listar modelos.
  */
 export async function detectProviders(): Promise<LocalProvider[]> {
-  const config = vscode.workspace.getConfiguration('gentleAiConnect');
+  const config = vscode.workspace.getConfiguration('apliarteAi');
   const lmstudioUrl = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
   const ollamaUrl = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
 

@@ -7,7 +7,7 @@ import { LocalProvider } from './detector';
 import { getRulesForPreset, type PresetId } from './preset';
 
 /**
- * Configura Continue con el ecosistema Gentle AI.
+ * Configura Continue con el ecosistema ApliArte AI.
  *
  * 1. Detecta el directorio de Continue (~/.continue/)
  * 2. Crea/actualiza config.yaml con el provider detectado
@@ -61,7 +61,7 @@ export async function setupContinue(
   }
 
   // Obtener preset
-  const config = vscode.workspace.getConfiguration('gentleAiConnect');
+  const config = vscode.workspace.getConfiguration('apliarteAi');
   const preset = config.get<PresetId>('preset', 'minimal');
 
   // Crear directorio de rules si no existe
@@ -71,13 +71,13 @@ export async function setupContinue(
 
   // Escribir la rule principal
   const rules = getRulesForPreset(preset);
-  const rulePath = path.join(rulesDir, 'gentle-ai.md');
+  const rulePath = path.join(rulesDir, 'apliarte-ai.md');
   fs.writeFileSync(rulePath, rules, 'utf-8');
 
   logger.info(`Rule escrita en ${rulePath} (preset: ${preset})`);
   logger.info(`Provider: ${provider.name}, Modelo: ${model}`);
 
   vscode.window.showInformationMessage(
-    `Gentle AI configurado: ${provider.name} / ${model} / preset ${preset}`
+    `ApliArte AI configurado: ${provider.name} / ${model} / preset ${preset}`
   );
 }

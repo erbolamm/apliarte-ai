@@ -39,12 +39,12 @@ export async function changePreset(): Promise<void> {
     return;
   }
 
-  const config = vscode.workspace.getConfiguration('gentleAiConnect');
+  const config = vscode.workspace.getConfiguration('apliarteAi');
   await config.update('preset', picked.id, vscode.ConfigurationTarget.Global);
 
   logger.info(`Preset cambiado a: ${picked.id}`);
   vscode.window.showInformationMessage(
-    `Preset cambiado a ${picked.label}. Ejecutá "Gentle AI: Configurar IA Local" para aplicar.`
+    `Preset cambiado a ${picked.label}. Ejecutá "ApliArte AI: Configurar IA Local" para aplicar.`
   );
 }
 
@@ -67,7 +67,7 @@ export function getRulesForPreset(preset: PresetId): string {
 // --- Contenido de rules por preset ---
 
 const RULES_MINIMAL = `---
-name: Gentle AI Persona (Lite)
+name: ApliArte AI Persona (Lite)
 description: Personalidad del agente Gentleman — versión ligera para modelos locales
 applyTo: "**"
 ---
@@ -97,7 +97,7 @@ Passionate and direct, but from a place of CARING. Use CAPS for emphasis.
 `;
 
 const RULES_ECOSYSTEM = `---
-name: Gentle AI Persona (Medium)
+name: ApliArte AI Persona (Medium)
 description: Personalidad + skills de foundation — para modelos medianos
 applyTo: "**"
 ---
@@ -143,7 +143,7 @@ Passionate and direct, but from a place of CARING. When someone is wrong: (1) va
 `;
 
 const RULES_FULL = `---
-name: Gentle AI Persona (Full)
+name: ApliArte AI Persona (Full)
 description: Ecosistema Gentleman completo — para modelos grandes o APIs comerciales
 applyTo: "**"
 ---

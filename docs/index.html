@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApliArte AI — Chat de IA Local para VS Code</title>
+  <meta name="description" content="Extensión de VS Code para correr modelos de IA directamente en tu máquina. Sin APIs externas, sin cuentas, sin coste. 100% privado." />
+  <meta property="og:title" content="ApliArte AI — Chat de IA Local para VS Code" />
+  <meta property="og:description" content="Corre modelos de IA directamente en VS Code. Sin APIs externas, sin cuentas, sin coste." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://erbolamm.github.io/apliarte-ai/" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/erbolamm/apliarte-ai/main/icon.png" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --green: #3fb950;
+      --purple: #bc8cff;
+      --orange: #f0883e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 60px;
+    }
+    .hero img {
+      width: 96px;
+      height: 96px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-badges img { height: 24px; }
+
+    /* CTA Buttons */
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn:hover { text-decoration: none; }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      color: var(--bg);
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Sections */
+    section {
+      padding: 60px 0;
+    }
+    section + section {
+      border-top: 1px solid var(--border);
+    }
+    section h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    /* Feature Cards */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+    }
+    .feature-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .emoji { font-size: 1.3rem; }
+
+    /* Models Table */
+    .models-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    .models-table th, .models-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .models-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .models-table tr:last-child td { border-bottom: none; }
+    .models-table .badge {
+      background: var(--green);
+      color: var(--bg);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* How it works */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      counter-reset: step;
+    }
+    .step {
+      text-align: center;
+      padding: 24px 16px;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 auto 16px;
+    }
+    .step h3 { margin-bottom: 8px; }
+    .step p { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Privacy */
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .privacy-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .privacy-item .icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    .privacy-item h3 { font-size: 1rem; margin-bottom: 4px; }
+    .privacy-item p { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Install code block */
+    .install-cmd {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 24px;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.95rem;
+      color: var(--green);
+      max-width: 500px;
+      margin: 16px auto 0;
+      text-align: center;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.75rem; }
+      .hero p { font-size: 1rem; }
+      section h2 { font-size: 1.4rem; }
+      .cta-group { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <img src="https://raw.githubusercontent.com/erbolamm/apliarte-ai/main/icon.png" alt="ApliArte AI" />
+    <h1>ApliArte AI</h1>
+    <p>Chat de IA 100% local para VS Code. Corre modelos directamente en tu máquina — sin APIs externas, sin cuentas, sin coste.</p>
+
+    <div class="hero-badges">
+      <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">
+        <img src="https://img.shields.io/visual-studio-marketplace/v/apliarte.apliarte-ai?label=Marketplace&color=blue" alt="Version" />
+      </a>
+      <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">
+        <img src="https://img.shields.io/visual-studio-marketplace/i/apliarte.apliarte-ai?label=Installs&color=green" alt="Installs" />
+      </a>
+      <a href="https://github.com/erbolamm/apliarte-ai">
+        <img src="https://img.shields.io/github/license/erbolamm/apliarte-ai" alt="License" />
+      </a>
+    </div>
+
+    <div class="cta-group">
+      <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai" class="btn btn-primary">
+        Instalar en VS Code
+      </a>
+      <a href="https://github.com/erbolamm/apliarte-ai" class="btn btn-secondary">
+        Ver en GitHub
+      </a>
+    </div>
+  </header>
+
+  <!-- Why -->
+  <section>
+    <div class="container">
+      <h2>Por qué ApliArte AI</h2>
+      <div class="privacy-grid">
+        <div class="privacy-item">
+          <div class="icon">🔒</div>
+          <h3>100% Privado</h3>
+          <p>Tu código nunca sale de tu máquina. Sin servidores externos.</p>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">🆓</div>
+          <h3>Gratis para siempre</h3>
+          <p>Modelos open-source. Sin suscripciones ni API keys.</p>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">⚡</div>
+          <h3>Sin configuración</h3>
+          <p>Modo local: un click y funciona. Sin instalar nada externo.</p>
+        </div>
+        <div class="privacy-item">
+          <div class="icon">🔌</div>
+          <h3>Sin internet</h3>
+          <p>Funciona completamente offline después de la primera descarga.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section>
+    <div class="container">
+      <h2>Funcionalidades</h2>
+      <div class="features">
+        <div class="feature-card">
+          <h3><span class="emoji">💬</span> Chat con streaming</h3>
+          <p>Respuestas en tiempo real con markdown, syntax highlighting y bloques de código con copiar, insertar y diff/apply.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🧠</span> Inferencia local</h3>
+          <p>Corre modelos ONNX directo en VS Code con transformers.js v4. Sin LM Studio, sin Ollama, sin nada.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🔗</span> LM Studio &amp; Ollama</h3>
+          <p>Detecta y conecta automáticamente tu servidor local. Compatible con cualquier modelo OpenAI-compatible.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">📁</span> Explorador de workspace</h3>
+          <p>Adjuntá archivos de tu proyecto como contexto. El modelo "ve" tu código completo.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">⚡</span> Acciones rápidas</h3>
+          <p>Explicar, refactorizar, buscar bugs, generar tests, documentar y optimizar con un click.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🎯</span> Recomendador de modelos</h3>
+          <p>Detecta tu hardware y sugiere el mejor modelo según tu RAM, CPU y GPU.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Models -->
+  <section>
+    <div class="container">
+      <h2>Modelos disponibles (modo Local)</h2>
+      <p style="text-align:center; color: var(--text-muted); margin-bottom: 24px;">Modelos ONNX preconfigurados y verificados. Se descargan automáticamente la primera vez.</p>
+      <table class="models-table">
+        <thead>
+          <tr>
+            <th>Modelo</th>
+            <th>Tamaño</th>
+            <th>Uso ideal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Qwen 2.5 0.5B Instruct</td>
+            <td>~350 MB</td>
+            <td>Respuestas instantáneas, preguntas simples</td>
+            <td><span class="badge">Recomendado</span></td>
+          </tr>
+          <tr>
+            <td>Qwen 2.5 1.5B Instruct</td>
+            <td>~1 GB</td>
+            <td>Buen balance entre velocidad y calidad</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Qwen 2.5 3B Instruct</td>
+            <td>~2 GB</td>
+            <td>Mejor calidad, necesita más RAM</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>SmolLM2 360M Instruct</td>
+            <td>~250 MB</td>
+            <td>Mínimo consumo de recursos</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section>
+    <div class="container">
+      <h2>Cómo funciona</h2>
+      <div class="steps">
+        <div class="step">
+          <h3>Instalá la extensión</h3>
+          <p>Desde el Marketplace de VS Code o con <code>code --install-extension</code></p>
+        </div>
+        <div class="step">
+          <h3>Elegí un modo</h3>
+          <p>Local (sin instalar nada) o Remoto (LM Studio / Ollama)</p>
+        </div>
+        <div class="step">
+          <h3>Seleccioná un modelo</h3>
+          <p>Del catálogo local o de los cargados en tu servidor</p>
+        </div>
+        <div class="step">
+          <h3>Chateá con tu código</h3>
+          <p>Adjuntá archivos, hacé preguntas, aplicá cambios directo</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section>
+    <div class="container">
+      <h2>Instalación</h2>
+      <div class="cta-group">
+        <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai" class="btn btn-primary">
+          Instalar desde el Marketplace
+        </a>
+      </div>
+      <div class="install-cmd">
+        code --install-extension apliarte.apliarte-ai
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>
+        Hecho por <a href="https://github.com/erbolamm">Javier Mateo (ApliArte)</a> &middot;
+        <a href="https://github.com/erbolamm/apliarte-ai">GitHub</a> &middot;
+        <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">Marketplace</a> &middot;
+        <a href="https://github.com/erbolamm/apliarte-ai/blob/main/LICENSE">MIT License</a>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

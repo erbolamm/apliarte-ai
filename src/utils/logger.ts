@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const channel = vscode.window.createOutputChannel('Gentle AI Connect');
+const channel = vscode.window.createOutputChannel('ApliArte AI');
 
 export const logger = {
   activate(): void {

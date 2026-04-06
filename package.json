@@ -1,8 +1,9 @@
 {
-  "name": "gentle-ai-connect",
-  "displayName": "Gentle AI Connect — Configurador de IA Local",
-  "description": "Conecta Continue con el ecosistema Gentle AI. Detecta LM Studio/Ollama y configura rules, skills y presets automáticamente. 100% local, 0 coste.",
-  "version": "0.1.0",
+  "name": "apliarte-ai",
+  "displayName": "ApliArte AI — Chat de IA Local",
+  "description": "Chat de IA local para VS Code. Corre modelos directo en tu máquina o conecta LM Studio/Ollama. Sin APIs externas, 100% privado, 0 coste.",
+  "version": "0.4.0",
+  "icon": "icon.png",
   "publisher": "apliarte",
   "author": {
     "name": "Javier Mateo (ApliArte)",
@@ -11,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/erbolamm/gentle-ai-connect"
+    "url": "https://github.com/erbolamm/apliarte-ai"
   },
   "engines": {
     "vscode": "^1.93.0"
@@ -22,7 +23,7 @@
     "Other"
   ],
   "keywords": [
-    "gentle-ai",
+    "apliarte-ai",
     "lmstudio",
     "ollama",
     "local-ai",
@@ -32,34 +33,192 @@
     "español"
   ],
   "activationEvents": [
-    "onCommand:gentleAiConnect.setup",
-    "onCommand:gentleAiConnect.detectProviders",
-    "onCommand:gentleAiConnect.changePreset"
+    "onView:apliarteAi.chatView"
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "apliarteAi",
+          "title": "ApliArte AI",
+          "icon": "$(hubot)"
+        }
+      ]
+    },
+    "views": {
+      "apliarteAi": [
+        {
+          "type": "webview",
+          "id": "apliarteAi.chatView",
+          "name": "Chat"
+        },
+        {
+          "id": "apliarteAi.workspaceView",
+          "name": "Workspace",
+          "icon": "$(folder)"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "gentleAiConnect.setup",
-        "title": "Gentle AI: Configurar IA Local",
+        "command": "apliarteAi.setup",
+        "title": "ApliArte AI: Configurar IA Local",
         "icon": "$(rocket)"
       },
       {
-        "command": "gentleAiConnect.detectProviders",
-        "title": "Gentle AI: Detectar LM Studio / Ollama"
+        "command": "apliarteAi.detectProviders",
+        "title": "ApliArte AI: Detectar LM Studio / Ollama"
       },
       {
-        "command": "gentleAiConnect.changePreset",
-        "title": "Gentle AI: Cambiar Preset (Full / Medium / Lite)"
+        "command": "apliarteAi.changePreset",
+        "title": "ApliArte AI: Cambiar Preset"
+      },
+      {
+        "command": "apliarteAi.sendFileToChat",
+        "title": "ApliArte AI: Enviar archivo al chat",
+        "icon": "$(file)"
+      },
+      {
+        "command": "apliarteAi.sendSelectionToChat",
+        "title": "ApliArte AI: Enviar selección al chat",
+        "icon": "$(selection)"
+      },
+      {
+        "command": "apliarteAi.sendSelectedFiles",
+        "title": "ApliArte AI: Enviar archivos seleccionados al chat",
+        "icon": "$(files)"
+      },
+      {
+        "command": "apliarteAi.refreshWorkspace",
+        "title": "Refrescar",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "apliarteAi.toggleFile",
+        "title": "Seleccionar/Deseleccionar archivo"
+      },
+      {
+        "command": "apliarteAi.action.explain",
+        "title": "ApliArte AI: 💡 Explicar código"
+      },
+      {
+        "command": "apliarteAi.action.refactor",
+        "title": "ApliArte AI: 🔧 Refactorizar"
+      },
+      {
+        "command": "apliarteAi.action.bugs",
+        "title": "ApliArte AI: 🐛 Buscar bugs"
+      },
+      {
+        "command": "apliarteAi.action.tests",
+        "title": "ApliArte AI: 🧪 Generar tests"
+      },
+      {
+        "command": "apliarteAi.action.docs",
+        "title": "ApliArte AI: 📝 Documentar"
+      },
+      {
+        "command": "apliarteAi.action.optimize",
+        "title": "ApliArte AI: ⚡ Optimizar"
+      },
+      {
+        "command": "apliarteAi.recommendModels",
+        "title": "ApliArte AI: 🧠 Recomendar modelos para mi equipo"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "apliarteAi.submenu",
+          "group": "apliarteAi@1"
+        }
+      ],
+      "apliarteAi.submenu": [
+        {
+          "command": "apliarteAi.sendSelectionToChat",
+          "when": "editorHasSelection",
+          "group": "send@1"
+        },
+        {
+          "command": "apliarteAi.sendFileToChat",
+          "group": "send@2"
+        },
+        {
+          "command": "apliarteAi.action.explain",
+          "when": "editorHasSelection",
+          "group": "actions@1"
+        },
+        {
+          "command": "apliarteAi.action.refactor",
+          "when": "editorHasSelection",
+          "group": "actions@2"
+        },
+        {
+          "command": "apliarteAi.action.bugs",
+          "when": "editorHasSelection",
+          "group": "actions@3"
+        },
+        {
+          "command": "apliarteAi.action.tests",
+          "when": "editorHasSelection",
+          "group": "actions@4"
+        },
+        {
+          "command": "apliarteAi.action.docs",
+          "when": "editorHasSelection",
+          "group": "actions@5"
+        },
+        {
+          "command": "apliarteAi.action.optimize",
+          "when": "editorHasSelection",
+          "group": "actions@6"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "apliarteAi.refreshWorkspace",
+          "when": "view == apliarteAi.workspaceView",
+          "group": "navigation"
+        },
+        {
+          "command": "apliarteAi.sendSelectedFiles",
+          "when": "view == apliarteAi.workspaceView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "submenus": [
+      {
+        "id": "apliarteAi.submenu",
+        "label": "🤖 ApliArte AI"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "apliarteAi.sendSelectionToChat",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g",
+        "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "apliarteAi.action.explain",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorTextFocus && editorHasSelection"
       }
     ],
     "configuration": {
-      "title": "Gentle AI Connect",
+      "title": "ApliArte AI",
       "properties": {
-        "gentleAiConnect.preset": {
+        "apliarteAi.preset": {
           "type": "string",
           "default": "minimal",
-          "enum": ["minimal", "ecosystem-only", "full-gentleman"],
+          "enum": [
+            "minimal",
+            "ecosystem-only",
+            "full-gentleman"
+          ],
           "enumDescriptions": [
             "Lite — Solo personalidad + SDD básico (~5k tokens). Ideal para modelos ≤ 8B",
             "Medium — SDD + skills de foundation (~20k tokens). Para modelos 13B-30B",
@@ -67,20 +226,23 @@
           ],
           "description": "Preset de configuración según la capacidad del modelo local"
         },
-        "gentleAiConnect.lmstudioEndpoint": {
+        "apliarteAi.lmstudioEndpoint": {
           "type": "string",
           "default": "http://localhost:1234/v1",
           "description": "URL del servidor LM Studio"
         },
-        "gentleAiConnect.ollamaEndpoint": {
+        "apliarteAi.ollamaEndpoint": {
           "type": "string",
           "default": "http://localhost:11434",
           "description": "URL del servidor Ollama"
         },
-        "gentleAiConnect.language": {
+        "apliarteAi.language": {
           "type": "string",
           "default": "es",
-          "enum": ["es", "en"],
+          "enum": [
+            "es",
+            "en"
+          ],
           "enumDescriptions": [
             "Español",
             "English"
@@ -103,5 +265,6 @@
     "@types/vscode": "^1.93.0",
     "esbuild": "^0.21.0",
     "typescript": "^5.5.0"
-  }
+  },
+  "dependencies": {}
 }
