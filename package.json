@@ -1,0 +1,107 @@
+{
+  "name": "gentle-ai-connect",
+  "displayName": "Gentle AI Connect — Configurador de IA Local",
+  "description": "Conecta Continue con el ecosistema Gentle AI. Detecta LM Studio/Ollama y configura rules, skills y presets automáticamente. 100% local, 0 coste.",
+  "version": "0.1.0",
+  "publisher": "apliarte",
+  "author": {
+    "name": "Javier Mateo (ApliArte)",
+    "url": "https://github.com/erbolamm"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erbolamm/gentle-ai-connect"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Chat",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "gentle-ai",
+    "lmstudio",
+    "ollama",
+    "local-ai",
+    "continue",
+    "gemma",
+    "ia-gratis",
+    "español"
+  ],
+  "activationEvents": [
+    "onCommand:gentleAiConnect.setup",
+    "onCommand:gentleAiConnect.detectProviders",
+    "onCommand:gentleAiConnect.changePreset"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gentleAiConnect.setup",
+        "title": "Gentle AI: Configurar IA Local",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "gentleAiConnect.detectProviders",
+        "title": "Gentle AI: Detectar LM Studio / Ollama"
+      },
+      {
+        "command": "gentleAiConnect.changePreset",
+        "title": "Gentle AI: Cambiar Preset (Full / Medium / Lite)"
+      }
+    ],
+    "configuration": {
+      "title": "Gentle AI Connect",
+      "properties": {
+        "gentleAiConnect.preset": {
+          "type": "string",
+          "default": "minimal",
+          "enum": ["minimal", "ecosystem-only", "full-gentleman"],
+          "enumDescriptions": [
+            "Lite — Solo personalidad + SDD básico (~5k tokens). Ideal para modelos ≤ 8B",
+            "Medium — SDD + skills de foundation (~20k tokens). Para modelos 13B-30B",
+            "Full — Todo el ecosistema Gentleman (~49k tokens). Para modelos grandes o APIs"
+          ],
+          "description": "Preset de configuración según la capacidad del modelo local"
+        },
+        "gentleAiConnect.lmstudioEndpoint": {
+          "type": "string",
+          "default": "http://localhost:1234/v1",
+          "description": "URL del servidor LM Studio"
+        },
+        "gentleAiConnect.ollamaEndpoint": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "URL del servidor Ollama"
+        },
+        "gentleAiConnect.language": {
+          "type": "string",
+          "default": "es",
+          "enum": ["es", "en"],
+          "enumDescriptions": [
+            "Español",
+            "English"
+          ],
+          "description": "Idioma del agente"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "lint": "tsc --noEmit",
+    "test": "node --import tsx --test test/**/*.test.ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.93.0",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.5.0"
+  }
+}
