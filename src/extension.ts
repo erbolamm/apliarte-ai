@@ -13,13 +13,13 @@ import { collectWorkspaceFiles } from './tools/executor';
 
 export function activate(context: vscode.ExtensionContext): void {
   logger.activate();
-  logger.info('ApliArte AI v0.5.2 — activando...');
+  logger.info('ApliArte AI v0.5.3 — activando...');
 
   // ── Local inference deps directory ─────────────────────
   setDepsDirectory(context.globalStorageUri.fsPath);
 
   // ── Chat panel ─────────────────────────────────────────
-  const chatProvider = new ChatViewProvider(context.extensionUri);
+  const chatProvider = new ChatViewProvider(context.extensionUri, context.globalState);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, chatProvider)
   );

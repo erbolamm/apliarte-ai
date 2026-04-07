@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.3] - 2026-04-07
+
+### Added
+- Persistencia de conversaciones: el historial se mantiene al cambiar de vista y entre sesiones
+- Soporte para Ollama: el modo Remote detecta automáticamente LM Studio u Ollama
+
+### Fixed
+- Mensajes de error actualizados para mencionar Ollama además de LM Studio
+
 ## [0.5.2] - 2026-04-07
 
 ### Fixed

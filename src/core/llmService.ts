@@ -59,9 +59,9 @@ export async function streamChat(
     if (err instanceof Error && err.name === 'AbortError') {
       // Re-check: was it the user or the timeout?
       if (options?.signal?.aborted) throw err;
-      throw new Error(`Timeout (${timeoutMs / 1000}s). ¿Está LM Studio respondiendo?`);
+      throw new Error(`Timeout (${timeoutMs / 1000}s). ¿Está LM Studio/Ollama respondiendo?`);
     }
-    throw new Error(`No se pudo conectar a ${endpoint}. ¿Está LM Studio corriendo?`);
+    throw new Error(`No se pudo conectar a ${endpoint}. ¿Está LM Studio u Ollama corriendo?`);
   }
 
   clearTimeout(timer);

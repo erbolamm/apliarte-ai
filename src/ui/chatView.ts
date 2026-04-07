@@ -35,8 +35,16 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private _contextText?: string;
   private _contextName?: string;
   private _provider: 'remote' | 'local' | 'agent' = 'remote';
+  private _remoteEndpoint?: string;
+  private _globalState: vscode.Memento;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    globalState: vscode.Memento,
+  ) {
+    this._globalState = globalState;
+    this._history = globalState.get<ChatMessage[]>('chatHistory', []);
+  }
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -57,6 +65,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           break;
         case 'clearHistory':
           this._history = [];
+          this._saveHistory();
           this._post({ type: 'cleared' });
           break;
         case 'stopGeneration':
@@ -87,6 +96,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         case 'setProvider':
           this._provider = data.provider;
           this._currentModel = undefined;
+          this._remoteEndpoint = undefined;
           if (data.provider === 'local') {
             await this._ensureLocalDeps();
           }
@@ -111,6 +121,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
     this._refreshModels();
     this._sendConnectionStatus();
+
+    // Restore previous conversation if any
+    if (this._history.length > 0) {
+      this._post({ type: 'restoreHistory', messages: this._history });
+    }
+  }
+
+  private _saveHistory(): void {
+    this._globalState.update('chatHistory', this._history);
   }
 
   public attachContext(name: string, text: string): void {
@@ -134,7 +153,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     if (!this._currentModel && this._provider !== 'agent') {
       const hint = this._provider === 'local'
         ? 'No hay modelo local cargado. Descarga uno desde el selector.'
-        : 'No hay modelo cargado. Abre LM Studio, carga un modelo, y vuelve a intentar.';
+        : 'No hay modelo cargado. Abre LM Studio u Ollama, carga un modelo, y vuelve a intentar.';
       this._post({ type: 'responseError', text: hint });
       return;
     }
@@ -174,7 +193,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           temperature: this._temperature,
         });
       } else {
-        const endpoint = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
+        const endpoint = await this._resolveRemoteEndpoint();
         await streamChat(endpoint, messages, (chunk: string) => {
           fullResponse += chunk;
           this._post({ type: 'responseChunk', text: chunk });
@@ -187,6 +206,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       }
 
       this._history.push({ role: 'assistant', content: fullResponse });
+      this._saveHistory();
       this._post({ type: 'responseEnd' });
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -198,6 +218,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this._post({ type: 'responseError', text: msg });
       // Remove last user message from history so they can retry
       this._history.pop();
+      this._saveHistory();
     } finally {
       this._abortController = undefined;
     }
@@ -333,8 +354,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    const config = vscode.workspace.getConfiguration('apliarteAi');
-    const endpoint = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
+    const endpoint = await this._resolveRemoteEndpoint();
 
     // Try up to 2 times with a small delay
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -371,10 +391,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this._post({ type: 'connectionStatus', connected: loaded, provider: 'local' });
       return;
     }
-    const config = vscode.workspace.getConfiguration('apliarteAi');
-    const endpoint = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
+    const endpoint = await this._resolveRemoteEndpoint();
     const connected = await checkConnection(endpoint);
-    this._post({ type: 'connectionStatus', connected, provider: 'remote' });
+    const name = endpoint.includes('11434') ? 'Ollama' : 'LM Studio';
+    this._post({ type: 'connectionStatus', connected, provider: 'remote', name });
   }
 
   private async _ensureLocalDeps(): Promise<void> {
@@ -391,6 +411,37 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       // Revert to remote provider
       this._provider = 'remote';
     }
+  }
+
+  /** Try LM Studio and Ollama endpoints, return the first that responds. Cache the result. */
+  private async _resolveRemoteEndpoint(): Promise<string> {
+    if (this._remoteEndpoint) return this._remoteEndpoint;
+
+    const config = vscode.workspace.getConfiguration('apliarteAi');
+    const lmstudio = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
+    const ollama = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
+    const ollamaV1 = `${ollama.replace(/\/+$/, '')}/v1`;
+
+    // Try both in parallel
+    const results = await Promise.allSettled([
+      checkConnection(lmstudio),
+      checkConnection(ollamaV1),
+    ]);
+
+    const lmOk = results[0].status === 'fulfilled' && results[0].value;
+    const ollamaOk = results[1].status === 'fulfilled' && results[1].value;
+
+    if (lmOk) {
+      this._remoteEndpoint = lmstudio;
+      logger.info(`Remote endpoint: LM Studio (${lmstudio})`);
+    } else if (ollamaOk) {
+      this._remoteEndpoint = ollamaV1;
+      logger.info(`Remote endpoint: Ollama (${ollamaV1})`);
+    } else {
+      // Default to LM Studio for error messages
+      this._remoteEndpoint = lmstudio;
+    }
+    return this._remoteEndpoint;
   }
 
   private async _downloadLocalModel(modelId: string): Promise<void> {
@@ -1075,7 +1126,7 @@ window.addEventListener('message', function(event) {
       if (curEl) {
         var body = curEl.querySelector('.msg-body');
         body.innerHTML = '<div style="color:var(--vscode-errorForeground)"><i class="codicon codicon-warning"></i> ' + esc(d.text) + '</div>' +
-          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio esté corriendo y tenga un modelo cargado.</div>';
+          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio u Ollama esté corriendo y tenga un modelo cargado.</div>';
       } else {
         // No assistant element yet — show error as a message
         hideWelcome();
@@ -1083,7 +1134,7 @@ window.addEventListener('message', function(event) {
         errDiv.className = 'msg assistant';
         errDiv.innerHTML = '<div class="msg-hdr"><span><i class="codicon codicon-warning"></i></span> Error</div>' +
           '<div class="msg-body"><div style="color:var(--vscode-errorForeground)">' + esc(d.text) + '</div>' +
-          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio esté corriendo y tenga un modelo cargado.</div></div>';
+          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio u Ollama esté corriendo y tenga un modelo cargado.</div></div>';
         msgs.appendChild(errDiv);
         msgs.scrollTop = msgs.scrollHeight;
       }
@@ -1169,7 +1220,7 @@ window.addEventListener('message', function(event) {
       } else {
         if (d.connected) {
           dot.classList.add('on');
-          stTxt.textContent = 'Online';
+          stTxt.textContent = d.name || 'Online';
         } else {
           dot.classList.remove('on');
           stTxt.textContent = 'Offline';
@@ -1221,6 +1272,17 @@ window.addEventListener('message', function(event) {
     case 'autoSend':
       input.value = d.text;
       send();
+      break;
+
+    case 'restoreHistory':
+      if (d.messages && d.messages.length > 0) {
+        hideWelcome();
+        d.messages.forEach(function(m) {
+          if (m.role === 'user' || m.role === 'assistant') {
+            addMsg(m.role, m.content);
+          }
+        });
+      }
       break;
   }
 });
