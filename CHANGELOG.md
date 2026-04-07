@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.2] - 2026-04-07
+
+### Fixed
+- Corregido icono del sidebar (activitybar no soporta formato dark/light object)
+- SVG del sidebar usa colores compatibles con theming de VS Code
+
 ## [0.5.1] - 2026-04-07
 
 ### Fixed

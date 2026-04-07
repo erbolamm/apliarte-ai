@@ -2,7 +2,7 @@
   "name": "apliarte-ai",
   "displayName": "ApliArte AI — Chat de IA Local",
   "description": "Chat de IA local para VS Code. Corre modelos directo en tu máquina o conecta LM Studio/Ollama. Sin APIs externas, 100% privado, 0 coste.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "icon": "icon.png",
   "publisher": "apliarte",
   "author": {
@@ -42,10 +42,7 @@
         {
           "id": "apliarteAi",
           "title": "ApliArte AI",
-          "icon": {
-            "dark": "media/icon-dark.svg",
-            "light": "media/icon-light.svg"
-          }
+          "icon": "media/icon-dark.svg"
         }
       ]
     },
