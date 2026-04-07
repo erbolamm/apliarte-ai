@@ -2,7 +2,7 @@
   "name": "apliarte-ai",
   "displayName": "ApliArte AI — Chat de IA Local",
   "description": "Chat de IA local para VS Code. Corre modelos directo en tu máquina o conecta LM Studio/Ollama. Sin APIs externas, 100% privado, 0 coste.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "icon": "icon.png",
   "publisher": "apliarte",
   "author": {
@@ -42,7 +42,10 @@
         {
           "id": "apliarteAi",
           "title": "ApliArte AI",
-          "icon": "$(hubot)"
+          "icon": {
+            "dark": "media/icon-dark.svg",
+            "light": "media/icon-light.svg"
+          }
         }
       ]
     },
@@ -100,31 +103,36 @@
       },
       {
         "command": "apliarteAi.action.explain",
-        "title": "ApliArte AI: 💡 Explicar código"
+        "title": "ApliArte AI: Explicar código"
       },
       {
         "command": "apliarteAi.action.refactor",
-        "title": "ApliArte AI: 🔧 Refactorizar"
+        "title": "ApliArte AI: Refactorizar"
       },
       {
         "command": "apliarteAi.action.bugs",
-        "title": "ApliArte AI: 🐛 Buscar bugs"
+        "title": "ApliArte AI: Buscar bugs"
       },
       {
         "command": "apliarteAi.action.tests",
-        "title": "ApliArte AI: 🧪 Generar tests"
+        "title": "ApliArte AI: Generar tests"
       },
       {
         "command": "apliarteAi.action.docs",
-        "title": "ApliArte AI: 📝 Documentar"
+        "title": "ApliArte AI: Documentar"
       },
       {
         "command": "apliarteAi.action.optimize",
-        "title": "ApliArte AI: ⚡ Optimizar"
+        "title": "ApliArte AI: Optimizar"
       },
       {
         "command": "apliarteAi.recommendModels",
-        "title": "ApliArte AI: 🧠 Recomendar modelos para mi equipo"
+        "title": "ApliArte AI: Recomendar modelos para mi equipo"
+      },
+      {
+        "command": "apliarteAi.indexWorkspace",
+        "title": "ApliArte AI: Indexar workspace (RAG)",
+        "icon": "$(cloud-upload)"
       }
     ],
     "menus": {
@@ -191,7 +199,7 @@
     "submenus": [
       {
         "id": "apliarteAi.submenu",
-        "label": "🤖 ApliArte AI"
+        "label": "ApliArte AI"
       }
     ],
     "keybindings": [
@@ -248,6 +256,16 @@
             "English"
           ],
           "description": "Idioma del agente"
+        },
+        "apliarteAi.agentEndpoint": {
+          "type": "string",
+          "default": "",
+          "description": "URL del servidor ApliArte Code Agent (ej: https://agent.apliarte.com). Dejar vacío para desactivar."
+        },
+        "apliarteAi.agentApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key para conectar con el agente remoto"
         }
       }
     }
@@ -263,8 +281,8 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.93.0",
+    "@vscode/codicons": "^0.0.45",
     "esbuild": "^0.21.0",
     "typescript": "^5.5.0"
-  },
-  "dependencies": {}
+  }
 }

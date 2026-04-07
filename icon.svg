@@ -1,43 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <!-- Fondo redondeado estilo ApliArte -->
+  <!-- Fondo redondeado -->
   <rect width="128" height="128" rx="20" ry="20" fill="#303030"/>
 
-  <!-- Pines (arriba y abajo) - Conexión -->
-  <rect x="43" y="26" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="55" y="26" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="67" y="26" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="79" y="26" width="6" height="12" rx="2" fill="#5ecef5" />
-  
-  <rect x="43" y="90" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="55" y="90" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="67" y="90" width="6" height="12" rx="2" fill="#5ecef5" />
-  <rect x="79" y="90" width="6" height="12" rx="2" fill="#5ecef5" />
+  <!-- Chevron superior (celeste claro) -->
+  <polyline points="24,62 58,20 92,62" fill="none" stroke="#7DD3FC" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Pines (izquierda y derecha) - Conexión -->
-  <rect x="26" y="43" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="26" y="55" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="26" y="67" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="26" y="79" width="12" height="6" rx="2" fill="#5ecef5" />
+  <!-- Chevron inferior (azul oscuro) -->
+  <polyline points="24,82 58,40 78,64" fill="none" stroke="#0369A1" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <rect x="90" y="43" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="90" y="55" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="90" y="67" width="12" height="6" rx="2" fill="#5ecef5" />
-  <rect x="90" y="79" width="12" height="6" rx="2" fill="#5ecef5" />
+  <!-- Chat bubble -->
+  <rect x="68" y="68" width="40" height="28" rx="8" ry="8" fill="white"/>
+  <polygon points="78,96 72,108 86,96" fill="white"/>
 
-  <!-- Chip Base Oscuro -->
-  <rect x="34" y="34" width="60" height="60" rx="10" ry="10" fill="#00467b" />
-  
-  <!-- Base Interna (Blanca) -->
-  <rect x="40" y="40" width="48" height="48" rx="6" ry="6" fill="#fdfdfd" opacity="0.95" />
-
-  <!-- Borde Interno Decorativo -->
-  <rect x="44" y="44" width="40" height="40" rx="4" ry="4" fill="none" stroke="#8fd5fa" stroke-width="2" />
-
-  <!-- Letra A de ApliArte AI -->
-  <text x="64" y="74" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="bold" fill="#005fa9" text-anchor="middle">A</text>
-
-  <!-- Luces de estado abajo para completar la paleta -->
-  <circle cx="56" cy="112" r="3" fill="#a6a6a6" />
-  <circle cx="64" cy="112" r="3" fill="#005fa9" />
-  <circle cx="72" cy="112" r="3" fill="#bebbb9" />
+  <!-- Tres puntos -->
+  <circle cx="78" cy="82" r="3.5" fill="#303030"/>
+  <circle cx="88" cy="82" r="3.5" fill="#303030"/>
+  <circle cx="98" cy="82" r="3.5" fill="#303030"/>
 </svg>

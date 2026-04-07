@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#C5C5C5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Top Chevron -->
+  <path d="M 3 10 L 11 2 L 19 10" />
+  
+  <!-- Bottom Chevron (shortened on the right to make room for the chat bubble) -->
+  <path d="M 3 16 L 11 8 L 14.5 11.5" />
+
+  <!-- Minimal Chat Bubble Outline -->
+  <path d="M 14.5 13.5
+           h 4.5
+           a 1.5 1.5 0 0 1 1.5 1.5
+           v 3
+           a 1.5 1.5 0 0 1 -1.5 1.5
+           h -1
+           l -2 2
+           v -2
+           h -1.5
+           a 1.5 1.5 0 0 1 -1.5 -1.5
+           v -3
+           a 1.5 1.5 0 0 1 1.5 -1.5 z" />
+           
+  <!-- Three dots (...) -->
+  <circle cx="15.5" cy="16.5" r="0.75" fill="#C5C5C5" stroke="none" />
+  <circle cx="17.25" cy="16.5" r="0.75" fill="#C5C5C5" stroke="none" />
+  <circle cx="19" cy="16.5" r="0.75" fill="#C5C5C5" stroke="none" />
+</svg>

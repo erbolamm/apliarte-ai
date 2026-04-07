@@ -7,7 +7,7 @@
 <p align="center">
   <strong>Chat de IA 100% local para VS Code.</strong><br>
   Corre modelos directamente en tu máquina — sin APIs externas, sin cuentas, sin coste.<br>
-  También conecta LM Studio y Ollama si ya los usás.
+  También conecta LM Studio y Ollama si ya los usas.
 </p>
 
 <p align="center">
@@ -35,9 +35,9 @@
 La mayoría de extensiones de IA para VS Code requieren una API key de pago o envían tu código a la nube. ApliArte AI es diferente:
 
 - **Sin internet**: Todo corre en tu máquina. Tu código nunca sale de tu ordenador.
-- **Sin cuentas**: No necesitás registrarte en ningún servicio.
+- **Sin cuentas**: No necesitas registrarte en ningún servicio.
 - **Sin coste**: Modelos open-source, gratis para siempre.
-- **Dos modos**: Inferencia local directa (transformers.js v4) o conectar LM Studio/Ollama.
+- **Tres modos**: Inferencia local (transformers.js v4), LM Studio/Ollama, o Agent Cloud con tu propio servidor.
 
 ---
 
@@ -54,7 +54,7 @@ La mayoría de extensiones de IA para VS Code requieren una API key de pago o en
 ### Inferencia local (modo Local)
 
 - Corre modelos ONNX directamente en VS Code usando [transformers.js v4](https://github.com/huggingface/transformers.js)
-- No necesitás instalar nada externo — las dependencias se descargan automáticamente la primera vez
+- No necesitas instalar nada externo — las dependencias se descargan automáticamente la primera vez
 - Catálogo de modelos preconfigurados y verificados:
 
 | Modelo | Tamaño | Uso recomendado |
@@ -74,15 +74,25 @@ La mayoría de extensiones de IA para VS Code requieren una API key de pago o en
 - Indicador de conexión con reintento automático
 - Compatible con cualquier modelo que soporte la API de OpenAI
 
+### Modo Agent (tu propio servidor)
+
+- Conecta la extensión a un backend propio desplegado en un VPS
+- El modelo de IA corre en la nube (OpenAI, Anthropic, Google, Groq…) — tú eliges cuál
+- **Herramientas de código**: el agente puede leer archivos, escribir código, buscar en tu proyecto y ejecutar comandos — todo con tu aprobación
+- **RAG automático**: indexa tu workspace y el agente busca contexto relevante antes de responder
+- Las herramientas se ejecutan **localmente en tu máquina** — el servidor solo coordina con el modelo de IA
+- Confirmación obligatoria antes de escribir archivos o ejecutar comandos en terminal
+- Guía completa de deployment en [server/README.md](server/README.md)
+
 ### Explorador de workspace
 
 - Árbol de archivos integrado en el panel de ApliArte AI
-- Seleccioná archivos para adjuntarlos como contexto al chat
+- Selecciona archivos para adjuntarlos como contexto al chat
 - El modelo "ve" tu código y responde con conocimiento de tu proyecto
 
 ### Acciones rápidas
 
-Seleccioná código y ejecutá con un click (o desde el menú contextual del editor):
+Selecciona código y ejecuta con un click (o desde el menú contextual del editor):
 
 | Acción | Descripción |
 |--------|-------------|
@@ -105,9 +115,9 @@ Seleccioná código y ejecutá con un click (o desde el menú contextual del edi
 
 ### Desde el Marketplace
 
-1. Abrí VS Code
+1. Abre VS Code
 2. `Cmd + Shift + X` (extensiones)
-3. Buscá **"ApliArte AI"**
+3. Busca **"ApliArte AI"**
 4. Click en **Instalar**
 
 ### Desde la línea de comandos
@@ -122,18 +132,28 @@ code --install-extension apliarte.apliarte-ai
 
 ### Modo Local (sin instalar nada)
 
-1. Abrí el panel de **ApliArte AI** en la barra lateral
-2. Seleccioná **"Local (sin instalar nada)"** en el selector de proveedor
+1. Abre el panel de **ApliArte AI** en la barra lateral
+2. Selecciona **"Local (sin instalar nada)"** en el selector de proveedor
 3. La primera vez, se instalan las dependencias (~1 GB, automático)
-4. Elegí un modelo del catálogo y esperá a que se descargue
-5. Empezá a chatear
+4. Elige un modelo del catálogo y espera a que se descargue
+5. Empieza a chatear
 
 ### Modo Remoto (LM Studio / Ollama)
 
-1. Tené [LM Studio](https://lmstudio.ai/) u [Ollama](https://ollama.ai/) corriendo con un modelo cargado
-2. Seleccioná **"LM Studio / Ollama"** en el selector de proveedor
+1. Ten [LM Studio](https://lmstudio.ai/) u [Ollama](https://ollama.ai/) corriendo con un modelo cargado
+2. Selecciona **"LM Studio / Ollama"** en el selector de proveedor
 3. El modelo se detecta automáticamente
-4. Empezá a chatear
+4. Empieza a chatear
+
+### Modo Agent (tu propio servidor)
+
+1. Despliega el backend en un VPS siguiendo la [guía de deployment](server/README.md)
+2. Selecciona **"Agent (Cloud)"** en el selector de proveedor
+3. Configura la URL y API key en los settings de VS Code:
+   - `apliarteAi.agentEndpoint` → la URL de tu servidor (ej: `https://agent.tudominio.com`)
+   - `apliarteAi.agentApiKey` → tu clave de API
+4. El indicador mostrará **"Agent"** cuando esté conectado
+5. (Opcional) Ejecuta el comando **"Indexar workspace (RAG)"** desde la paleta de comandos para que el agente conozca tu proyecto
 
 ### Atajos de teclado
 
@@ -144,7 +164,7 @@ code --install-extension apliarte.apliarte-ai
 
 ### Paleta de comandos
 
-Abrí la paleta (`Cmd + Shift + P`) y escribí **"ApliArte AI"** para ver todos los comandos disponibles.
+Abre la paleta (`Cmd + Shift + P`) y escribe **"ApliArte AI"** para ver todos los comandos disponibles.
 
 ---
 
@@ -152,9 +172,12 @@ Abrí la paleta (`Cmd + Shift + P`) y escribí **"ApliArte AI"** para ver todos 
 
 | Setting | Descripción | Default |
 |---------|-------------|---------|
-| `apliarteAi.lmstudioEndpoint` | URL del servidor LM Studio/Ollama | `http://localhost:1234/v1` |
-| `apliarteAi.systemPrompt` | Prompt de sistema personalizado | (preset Gentleman) |
-| `apliarteAi.temperature` | Temperatura del modelo (0.0 - 2.0) | `0.7` |
+| `apliarteAi.preset` | Preset de configuración (minimal, ecosystem-only, full-gentleman) | `minimal` |
+| `apliarteAi.lmstudioEndpoint` | URL del servidor LM Studio | `http://localhost:1234/v1` |
+| `apliarteAi.ollamaEndpoint` | URL del servidor Ollama | `http://localhost:11434` |
+| `apliarteAi.language` | Idioma del agente (es / en) | `es` |
+| `apliarteAi.agentEndpoint` | URL del backend Agent (modo Agent) | _(vacío)_ |
+| `apliarteAi.agentApiKey` | API key para autenticar con el backend Agent | _(vacío)_ |
 
 ---
 
@@ -166,17 +189,25 @@ apliarte-ai/
 │   ├── extension.ts          # Entry point, registra comandos y providers
 │   ├── core/
 │   │   ├── llmService.ts     # Cliente OpenAI-compatible (LM Studio/Ollama)
+│   │   ├── agentService.ts   # Cliente del backend Agent (SSE streaming)
 │   │   ├── localInference.ts # Inferencia local con transformers.js v4
 │   │   ├── detector.ts       # Detección de LM Studio/Ollama en el sistema
 │   │   ├── setup.ts          # Wizard de configuración inicial
 │   │   ├── preset.ts         # System prompts preconfigurados
 │   │   └── modelRecommender.ts # Recomendador de modelos según hardware
+│   ├── tools/
+│   │   └── executor.ts       # Ejecutor local de herramientas (read/write/search/terminal)
 │   ├── ui/
 │   │   ├── chatView.ts       # Webview del chat principal
 │   │   ├── workspaceView.ts  # Explorador de workspace
 │   │   └── quickActions.ts   # Acciones rápidas sobre código
 │   └── utils/
 │       └── logger.ts         # Sistema de logs
+├── server/                   # Backend para modo Agent (Docker)
+│   ├── main.py               # API FastAPI (chat proxy, RAG, auth)
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── requirements.txt
 ├── dist/                     # Bundle compilado (esbuild)
 ├── package.json              # Manifiesto de la extensión
 └── esbuild.js                # Configuración de build
@@ -184,21 +215,23 @@ apliarte-ai/
 
 ### Stack técnico
 
-- **TypeScript** + **esbuild** (bundle de ~70 KB)
+- **TypeScript** + **esbuild** (bundle de ~80 KB)
 - **transformers.js v4** para inferencia local (instalado on-demand, no en el bundle)
 - **API OpenAI-compatible** para LM Studio/Ollama
+- **FastAPI** + **Ollama embeddings** para el backend Agent
 - **VS Code Webview API** para la interfaz del chat
 
 ---
 
 ## Privacidad
 
-ApliArte AI no envía datos a ningún servidor externo. Todo el procesamiento ocurre en tu máquina:
+ApliArte AI respeta tu privacidad por diseño:
 
-- **Modo Local**: El modelo corre dentro del proceso de VS Code usando transformers.js
-- **Modo Remoto**: La comunicación es entre VS Code y tu servidor local (localhost)
-- **Sin telemetría**: No se recopila ningún dato de uso
-- **Sin cuentas**: No se requiere registro ni login
+- **Modo Local**: El modelo corre dentro del proceso de VS Code usando transformers.js. Nada sale de tu máquina.
+- **Modo Remoto**: La comunicación es entre VS Code y tu servidor local (localhost). Nada sale de tu red.
+- **Modo Agent**: Tu código se envía a **tu propio servidor** (que tú controlas). Las herramientas (leer/escribir archivos, terminal) se ejecutan **localmente** en tu máquina — el servidor solo coordina con el modelo de IA. Este modo es **opt-in**: solo se activa si tú lo configuras.
+- **Sin telemetría**: No se recopila ningún dato de uso.
+- **Sin cuentas**: No se requiere registro ni login.
 
 ---
 
@@ -208,9 +241,13 @@ ApliArte AI no envía datos a ningún servidor externo. Todo el procesamiento oc
 - [x] v0.2 — Chat con streaming y markdown
 - [x] v0.3 — Workspace explorer, acciones rápidas, diff/apply, recomendador de modelos
 - [x] v0.4 — Inferencia local con transformers.js v4
-- [ ] v0.5 — Soporte MCP (Model Context Protocol)
-- [ ] v0.6 — Multi-idioma (EN/ES)
-- [ ] v1.0 — Agentes autónomos locales
+- [x] v0.5 — Modo Agent con backend propio (tool-calling, RAG, deploy en VPS)
+- [ ] **v0.6 — Soporte MCP Client** (Model Context Protocol) ⬅️ en desarrollo
+- [ ] v0.7 — Mejoras de UX, persistencia de conversaciones, multi-idioma
+- [ ] v0.8 — Quick-setup para servidores MCP populares (engram, GitHub, PostgreSQL…)
+- [ ] v1.0 — Release estable
+
+> 📋 Roadmap técnico detallado: [ROADMAP.md](ROADMAP.md)
 
 ---
 
@@ -227,7 +264,7 @@ ApliArte AI no envía datos a ningún servidor externo. Todo el procesamiento oc
 
 ## Contribuir
 
-Las contribuciones son bienvenidas. Abrí un [issue](https://github.com/erbolamm/apliarte-ai/issues) o un [pull request](https://github.com/erbolamm/apliarte-ai/pulls).
+Las contribuciones son bienvenidas. Abre un [issue](https://github.com/erbolamm/apliarte-ai/issues) o un [pull request](https://github.com/erbolamm/apliarte-ai/pulls).
 
 ```bash
 git clone https://github.com/erbolamm/apliarte-ai.git
@@ -256,7 +293,7 @@ ApliArte AI nació de una frustración: todas las extensiones de IA para VS Code
 
 Con transformers.js v4 conseguí que los modelos corran directamente dentro de VS Code — sin instalar LM Studio, sin Ollama, sin nada. Un click y funciona. Tu código nunca sale de tu ordenador.
 
-Si sos desarrollador y valorás tu privacidad, esta herramienta es para vos. Es gratis, es open source, y siempre lo será.
+Si eres desarrollador y valoras tu privacidad, esta herramienta es para vos. Es gratis, es open source, y siempre lo será.
 
 </details>
 

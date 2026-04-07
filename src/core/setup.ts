@@ -23,7 +23,7 @@ export async function setupContinue(
   // Verificar que Continue está instalado
   if (!fs.existsSync(continueDir)) {
     vscode.window.showErrorMessage(
-      'No se encontró ~/.continue/. Instalá la extensión Continue primero.'
+      'No se encontró ~/.continue/. Instala la extensión Continue primero.'
     );
     return;
   }
@@ -35,7 +35,7 @@ export async function setupContinue(
   } else {
     const picked = await vscode.window.showQuickPick(
       providers.map((p) => ({ label: p.name, description: p.models.join(', '), provider: p })),
-      { placeHolder: 'Seleccioná el proveedor de IA local' }
+      { placeHolder: 'Selecciona el proveedor de IA local' }
     );
     if (!picked) {
       return;
@@ -50,7 +50,7 @@ export async function setupContinue(
   } else if (provider.models.length > 1) {
     const pickedModel = await vscode.window.showQuickPick(
       provider.models.map((m) => ({ label: m })),
-      { placeHolder: 'Seleccioná el modelo' }
+      { placeHolder: 'Selecciona el modelo' }
     );
     if (!pickedModel) {
       return;

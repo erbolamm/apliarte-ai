@@ -5,6 +5,11 @@ node_modules/**
 .gitignore
 tsconfig.json
 esbuild.js
-**/*.ts
 **/*.map
 test-transformers.mjs
+server/**
+conversacion.md
+logs.md
+keys/**
+docs/**
+media/codicons/ico.png

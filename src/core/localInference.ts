@@ -126,7 +126,7 @@ async function ensureImported(): Promise<void> {
   if (_pipelineFn) return;
 
   if (!areDepsInstalled()) {
-    throw new Error('Las dependencias de inferencia local no están instaladas. Seleccioná modo Local para instalarlas.');
+    throw new Error('Las dependencias de inferencia local no están instaladas. Selecciona modo Local para instalarlas.');
   }
 
   // Dynamic import from the deps directory
@@ -211,7 +211,7 @@ export async function streamChatLocal(
   options?: StreamOptions
 ): Promise<void> {
   if (!_generator) {
-    throw new Error('No hay modelo local cargado. Seleccioná y descargá un modelo primero.');
+    throw new Error('No hay modelo local cargado. Selecciona y descarga un modelo primero.');
   }
 
   logger.info(`Inferencia local: ${messages.length} msgs, model=${_currentModelId}`);

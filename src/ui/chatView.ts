@@ -17,6 +17,12 @@ import {
   areDepsInstalled,
   installDeps,
 } from '../core/localInference';
+import {
+  streamAgentChat,
+  continueAfterToolCall,
+  checkAgentConnection,
+} from '../core/agentService';
+import { executeTool } from '../tools/executor';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'apliarteAi.chatView';
@@ -28,7 +34,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private _temperature = 0.7;
   private _contextText?: string;
   private _contextName?: string;
-  private _provider: 'remote' | 'local' = 'remote';
+  private _provider: 'remote' | 'local' | 'agent' = 'remote';
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -38,8 +44,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     _token: vscode.CancellationToken
   ): void {
     this._view = webviewView;
-    webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.html = this._getHtml();
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, 'media')],
+    };
+    webviewView.webview.html = this._getHtml(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
@@ -119,13 +128,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
     const config = vscode.workspace.getConfiguration('apliarteAi');
 
-    if (!this._currentModel) {
+    if (!this._currentModel && this._provider !== 'agent') {
       await this._refreshModels();
     }
-    if (!this._currentModel) {
+    if (!this._currentModel && this._provider !== 'agent') {
       const hint = this._provider === 'local'
-        ? 'No hay modelo local cargado. Descargá uno desde el selector.'
-        : 'No hay modelo cargado. Abrí LM Studio, cargá un modelo, y volvé a intentar.';
+        ? 'No hay modelo local cargado. Descarga uno desde el selector.'
+        : 'No hay modelo cargado. Abre LM Studio, carga un modelo, y vuelve a intentar.';
       this._post({ type: 'responseError', text: hint });
       return;
     }
@@ -154,7 +163,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     try {
       let fullResponse = '';
 
-      if (this._provider === 'local') {
+      if (this._provider === 'agent') {
+        fullResponse = await this._handleAgentChat(config, messages);
+      } else if (this._provider === 'local') {
         await streamChatLocal(messages, (chunk: string) => {
           fullResponse += chunk;
           this._post({ type: 'responseChunk', text: chunk });
@@ -192,7 +203,122 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  /**
+   * Agent chat with tool-calling loop.
+   * The agent backend may request tools → we execute locally → send results back.
+   * Max 10 tool iterations to prevent infinite loops.
+   */
+  private async _handleAgentChat(
+    config: vscode.WorkspaceConfiguration,
+    messages: ChatMessage[]
+  ): Promise<string> {
+    const endpoint = config.get<string>('agentEndpoint', '');
+    const apiKey = config.get<string>('agentApiKey', '');
+
+    if (!endpoint) throw new Error('Configura apliarteAi.agentEndpoint en Settings.');
+    if (!apiKey) throw new Error('Configura apliarteAi.agentApiKey en Settings.');
+
+    // Get workspace ID for RAG
+    const folders = vscode.workspace.workspaceFolders;
+    const workspaceId = folders?.[0]
+      ? Buffer.from(folders[0].uri.fsPath).toString('base64url').slice(0, 32)
+      : undefined;
+
+    let fullResponse = '';
+    let currentMessages = [...messages];
+    const MAX_TOOL_ITERATIONS = 10;
+
+    for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
+      const isFirstCall = iteration === 0;
+      const stream = isFirstCall
+        ? streamAgentChat(endpoint, apiKey, currentMessages, {
+            signal: this._abortController?.signal,
+            temperature: this._temperature,
+            workspaceId,
+          })
+        : continueAfterToolCall(endpoint, apiKey, currentMessages, {
+            signal: this._abortController?.signal,
+            temperature: this._temperature,
+            workspaceId,
+          });
+
+      let gotToolCall = false;
+
+      for await (const event of stream) {
+        switch (event.type) {
+          case 'chunk':
+            fullResponse += event.text ?? '';
+            this._post({ type: 'responseChunk', text: event.text });
+            break;
+
+          case 'tool_call': {
+            gotToolCall = true;
+            const tc = event.toolCall!;
+            // Show tool call in UI
+            this._post({
+              type: 'responseChunk',
+              text: `\n\n**Ejecutando ${tc.name}**...\n`,
+            });
+            fullResponse += `\n\n**Ejecutando ${tc.name}**...\n`;
+
+            // Execute tool locally
+            const result = await executeTool(tc);
+
+            // Append assistant tool_call + tool result to messages (OpenAI format)
+            currentMessages.push({
+              role: 'assistant',
+              content: '',
+              // @ts-expect-error — tool_calls field for OpenAI protocol
+              tool_calls: [{
+                id: tc.id,
+                type: 'function',
+                function: { name: tc.name, arguments: JSON.stringify(tc.arguments) },
+              }],
+            });
+            currentMessages.push({
+              role: 'tool' as 'user', // ChatMessage type doesn't have 'tool', cast for protocol
+              content: result.content,
+              // @ts-expect-error — tool_call_id field for OpenAI protocol
+              tool_call_id: tc.id,
+            });
+
+            // Show tool result preview
+            const preview = result.content.slice(0, 200);
+            this._post({
+              type: 'responseChunk',
+              text: `\`\`\`\n${preview}${result.content.length > 200 ? '\n...' : ''}\n\`\`\`\n`,
+            });
+            fullResponse += `\`\`\`\n${preview}${result.content.length > 200 ? '\n...' : ''}\n\`\`\`\n`;
+            break;
+          }
+
+          case 'error':
+            throw new Error(event.text ?? 'Error del agente');
+
+          case 'done':
+            return fullResponse;
+        }
+      }
+
+      // If no tool call, we're done
+      if (!gotToolCall) break;
+    }
+
+    return fullResponse;
+  }
+
   private async _refreshModels(): Promise<void> {
+    if (this._provider === 'agent') {
+      // Agent mode doesn't use local model selector — model is picked server-side
+      this._post({
+        type: 'modelsLoaded',
+        models: ['agent-default'],
+        selected: 'agent-default',
+        agentMode: true,
+      });
+      return;
+    }
+
     if (this._provider === 'local') {
       const models = await listLocalModels();
       const loaded = getLoadedModel();
@@ -228,6 +354,18 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async _sendConnectionStatus(): Promise<void> {
+    if (this._provider === 'agent') {
+      const config = vscode.workspace.getConfiguration('apliarteAi');
+      const endpoint = config.get<string>('agentEndpoint', '');
+      const apiKey = config.get<string>('agentApiKey', '');
+      if (!endpoint || !apiKey) {
+        this._post({ type: 'connectionStatus', connected: false, provider: 'agent' });
+        return;
+      }
+      const connected = await checkAgentConnection(endpoint, apiKey);
+      this._post({ type: 'connectionStatus', connected, provider: 'agent' });
+      return;
+    }
     if (this._provider === 'local') {
       const loaded = isModelLoaded();
       this._post({ type: 'connectionStatus', connected: loaded, provider: 'local' });
@@ -286,18 +424,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private async _applyDiff(code: string): Promise<void> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showWarningMessage('No hay editor activo. Abrí el archivo donde querés aplicar el cambio.');
+      vscode.window.showWarningMessage('No hay editor activo. Abre el archivo donde quieres aplicar el cambio.');
       return;
     }
 
     const originalUri = editor.document.uri;
     const originalContent = editor.document.getText();
     const fileName = editor.document.fileName.split('/').pop() ?? 'archivo';
-
-    // Create a virtual document with the proposed new code
-    const proposedUri = vscode.Uri.parse(
-      `untitled:${fileName}.proposed`
-    );
 
     const proposedDoc = await vscode.workspace.openTextDocument({
       content: code,
@@ -312,7 +445,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     );
 
     const action = await vscode.window.showInformationMessage(
-      '¿Querés aplicar estos cambios?',
+      '¿Quieres aplicar estos cambios?',
       'Aplicar',
       'Cancelar'
     );
@@ -364,7 +497,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private _getSystemPrompt(preset: string): string {
     switch (preset) {
       case 'full-gentleman':
-        return 'Eres un Senior Architect con 15+ años de experiencia, GDE & MVP. Responde SIEMPRE en español rioplatense (voseo). Eres apasionado, directo, y te importa que la gente aprenda. CONCEPTS > CODE. Usá CAPS para énfasis. Si algo se puede hacer mejor, decilo.';
+        return 'Eres un Senior Architect con 15+ años de experiencia, GDE & MVP. Responde SIEMPRE en español. Eres apasionado, directo, y te importa que la gente aprenda. CONCEPTS > CODE. Usa MAYÚSCULAS para énfasis. Si algo se puede hacer mejor, dilo.';
       case 'ecosystem-only':
         return 'Eres un arquitecto de software senior. Responde SIEMPRE en español. Sé directo, propone alternativas, explica el razonamiento técnico. Prioriza conceptos sobre código.';
       default:
@@ -379,12 +512,16 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   // ---------------------------------------------------------------------------
   // HTML / CSS / JS
   // ---------------------------------------------------------------------------
-  private _getHtml(): string {
+  private _getHtml(webview: vscode.Webview): string {
+    const codiconUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'media', 'codicons', 'codicon.css')
+    );
     return `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="${codiconUri}">
 <style>
 /* ── Reset ─────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -549,6 +686,14 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;
   -webkit-appearance:none;width:10px;height:10px;border-radius:50%;
   background:var(--vscode-button-background);cursor:pointer;
 }
+/* ── Codicon ───────────────────────────────────────────── */
+.codicon{font-size:inherit;vertical-align:middle;}
+.msg-hdr .codicon{font-size:12px;}
+.tb .codicon{font-size:14px;}
+.act-btn .codicon{font-size:15px;}
+.cb-acts .codicon{font-size:10px;}
+.qa .codicon{font-size:13px;margin-right:2px;}
+#welcome .logo .codicon{font-size:44px;}
 </style>
 </head>
 <body>
@@ -559,10 +704,11 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;
   <select id="provider-select" title="Proveedor">
     <option value="remote">LM Studio / Ollama</option>
     <option value="local">Local (sin instalar nada)</option>
+    <option value="agent">Agent (Cloud)</option>
   </select>
   <select id="model-select" title="Modelo"><option value="">cargando…</option></select>
-  <button class="tb" id="export-btn" title="Exportar chat">📥</button>
-  <button class="tb" id="clear-btn" title="Limpiar chat">🗑️</button>
+  <button class="tb" id="export-btn" title="Exportar chat"><i class="codicon codicon-export"></i></button>
+  <button class="tb" id="clear-btn" title="Limpiar chat"><i class="codicon codicon-trash"></i></button>
 </div>
 
 <!-- ── Download progress bar ───────────────────────────── -->
@@ -576,35 +722,35 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;
 <!-- ── Messages ────────────────────────────────────────── -->
 <div id="messages">
   <div id="welcome">
-    <div class="logo">🤖</div>
+    <div class="logo"><i class="codicon codicon-hubot"></i></div>
     <h2>ApliArte AI Chat</h2>
     <p class="sub">100% local · 0 coste · Tus datos, tu máquina</p>
-    <p class="sub" style="font-size:11px;margin-top:4px;">Modo Local: no necesitás instalar nada extra</p>
+    <p class="sub" style="font-size:11px;margin-top:4px;">Modo Local: no necesitas instalar nada extra</p>
     <div class="qa">
-      <button onclick="reqCtx('file')">📄 Enviar archivo</button>
-      <button onclick="reqCtx('selection')">✂️ Enviar selección</button>
+      <button onclick="reqCtx('file')"><i class="codicon codicon-file"></i> Enviar archivo</button>
+      <button onclick="reqCtx('selection')"><i class="codicon codicon-code"></i> Enviar selección</button>
     </div>
   </div>
 </div>
 
 <!-- ── Context bar ─────────────────────────────────────── -->
 <div id="ctx">
-  <span>📎</span><span class="info" id="ctx-info"></span>
+  <span><i class="codicon codicon-pin"></i></span><span class="info" id="ctx-info"></span>
   <button class="rm" id="ctx-rm" title="Quitar contexto">✕</button>
 </div>
 
 <!-- ── Input area ──────────────────────────────────────── -->
 <div id="input-area">
   <div id="input-row">
-    <button class="act-btn tb" id="attach-btn" title="Adjuntar archivo o selección">📎</button>
-    <textarea id="input" rows="1" placeholder="Escribí tu mensaje…"></textarea>
-    <button class="act-btn" id="send-btn" title="Enviar (Enter)">▶</button>
-    <button class="act-btn" id="stop-btn" title="Detener generación">⏹</button>
+    <button class="act-btn tb" id="attach-btn" title="Adjuntar archivo o selección"><i class="codicon codicon-pin"></i></button>
+    <textarea id="input" rows="1" placeholder="Escribe tu mensaje…"></textarea>
+    <button class="act-btn" id="send-btn" title="Enviar (Enter)"><i class="codicon codicon-play"></i></button>
+    <button class="act-btn" id="stop-btn" title="Detener generación"><i class="codicon codicon-debug-stop"></i></button>
   </div>
   <div id="stats">
     <span id="wc">0 palabras</span>
     <div class="temp-ctrl">
-      <span>🌡️</span>
+      <span><i class="codicon codicon-dashboard"></i></span>
       <input type="range" id="temp" min="0" max="1.5" step="0.1" value="0.7">
       <span id="temp-val">0.7</span>
     </div>
@@ -710,9 +856,9 @@ function codeBlock(code, lang, isStreaming) {
   var idx = codeBlocks.length;
   codeBlocks.push(code);
   var acts = isStreaming ? '' :
-    '<button onclick="cpB(' + idx + ',this)" title="Copiar">📋 Copiar</button>' +
-    '<button onclick="insB(' + idx + ')" title="Insertar en cursor">📥 Insertar</button>' +
-    '<button onclick="diffB(' + idx + ')" title="Ver diff y aplicar">🔀 Aplicar</button>';
+    '<button onclick="cpB(' + idx + ',this)" title="Copiar"><i class="codicon codicon-copy"></i> Copiar</button>' +
+    '<button onclick="insB(' + idx + ')" title="Insertar en cursor"><i class="codicon codicon-go-to-file"></i> Insertar</button>' +
+    '<button onclick="diffB(' + idx + ')" title="Ver diff y aplicar"><i class="codicon codicon-diff"></i> Aplicar</button>';
   return '<div class="cb' + (isStreaming ? ' streaming' : '') + '">' +
     '<div class="cb-head">' +
       '<span class="cb-lang">' + (lang || 'code') + '</span>' +
@@ -724,9 +870,9 @@ function codeBlock(code, lang, isStreaming) {
 
 function cpB(idx, btn) {
   navigator.clipboard.writeText(codeBlocks[idx]).then(function() {
-    btn.textContent = '✅ Copiado';
+    btn.innerHTML = '<i class="codicon codicon-pass"></i> Copiado';
     btn.classList.add('ok');
-    setTimeout(function() { btn.textContent = '📋 Copiar'; btn.classList.remove('ok'); }, 1500);
+    setTimeout(function() { btn.innerHTML = '<i class="codicon codicon-copy"></i> Copiar'; btn.classList.remove('ok'); }, 1500);
   });
 }
 
@@ -777,7 +923,7 @@ function addMsg(role, text) {
   hideWelcome();
   var div = document.createElement('div');
   div.className = 'msg ' + role;
-  var avatar = role === 'user' ? '👤' : '🤖';
+  var avatar = role === 'user' ? '<i class="codicon codicon-account"></i>' : '<i class="codicon codicon-hubot"></i>';
   var label  = role === 'user' ? 'Tú' : 'ApliArte AI';
   div.innerHTML = '<div class="msg-hdr"><span>' + avatar + '</span> ' + label + '</div>' +
     '<div class="msg-body">' + (role === 'user' ? esc(text) : renderMD(text)) + '</div>';
@@ -881,7 +1027,7 @@ window.addEventListener('message', function(event) {
       hideWelcome();
       curEl = document.createElement('div');
       curEl.className = 'msg assistant';
-      curEl.innerHTML = '<div class="msg-hdr"><span>🤖</span> ApliArte AI</div>' +
+      curEl.innerHTML = '<div class="msg-hdr"><span><i class="codicon codicon-hubot"></i></span> ApliArte AI</div>' +
         '<div class="msg-body"><span class="thinking">Pensando<span class="d">.</span><span class="d">.</span><span class="d">.</span></span></div>';
       msgs.appendChild(curEl);
       msgs.scrollTop = msgs.scrollHeight;
@@ -915,7 +1061,7 @@ window.addEventListener('message', function(event) {
       stopB.style.display = 'none';
       if (curEl) {
         var body = curEl.querySelector('.msg-body');
-        body.innerHTML = renderMD(rawText) + '<div style="margin-top:6px;font-size:11px;opacity:.5;font-style:italic;">⏹ Generación detenida</div>';
+        body.innerHTML = renderMD(rawText) + '<div style="margin-top:6px;font-size:11px;opacity:.5;font-style:italic;"><i class="codicon codicon-debug-stop"></i> Generación detenida</div>';
       }
       curEl = null;
       rawText = '';
@@ -928,16 +1074,16 @@ window.addEventListener('message', function(event) {
       stopB.style.display = 'none';
       if (curEl) {
         var body = curEl.querySelector('.msg-body');
-        body.innerHTML = '<div style="color:var(--vscode-errorForeground)">⚠️ ' + esc(d.text) + '</div>' +
-          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verificá que LM Studio esté corriendo y tenga un modelo cargado.</div>';
+        body.innerHTML = '<div style="color:var(--vscode-errorForeground)"><i class="codicon codicon-warning"></i> ' + esc(d.text) + '</div>' +
+          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio esté corriendo y tenga un modelo cargado.</div>';
       } else {
         // No assistant element yet — show error as a message
         hideWelcome();
         var errDiv = document.createElement('div');
         errDiv.className = 'msg assistant';
-        errDiv.innerHTML = '<div class="msg-hdr"><span>⚠️</span> Error</div>' +
+        errDiv.innerHTML = '<div class="msg-hdr"><span><i class="codicon codicon-warning"></i></span> Error</div>' +
           '<div class="msg-body"><div style="color:var(--vscode-errorForeground)">' + esc(d.text) + '</div>' +
-          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verificá que LM Studio esté corriendo y tenga un modelo cargado.</div></div>';
+          '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica que LM Studio esté corriendo y tenga un modelo cargado.</div></div>';
         msgs.appendChild(errDiv);
         msgs.scrollTop = msgs.scrollHeight;
       }
@@ -951,7 +1097,16 @@ window.addEventListener('message', function(event) {
 
     case 'modelsLoaded':
       mSel.innerHTML = '';
-      if (d.localCatalog && d.localCatalog.length > 0) {
+      if (d.agentMode) {
+        // Agent provider — model selector hidden, agent picks server-side
+        var agOpt = document.createElement('option');
+        agOpt.value = 'agent-default';
+        agOpt.textContent = 'Modelo del servidor';
+        agOpt.selected = true;
+        mSel.appendChild(agOpt);
+        mSel.disabled = true;
+      } else if (d.localCatalog && d.localCatalog.length > 0) {
+        mSel.disabled = false;
         // Local provider — show catalog with download options
         if (d.loadedModel) {
           var lOpt = document.createElement('option');
@@ -975,11 +1130,12 @@ window.addEventListener('message', function(event) {
         if (!d.loadedModel) {
           var hint = document.createElement('option');
           hint.value = '';
-          hint.textContent = 'Seleccioná un modelo para descargar';
+          hint.textContent = 'Selecciona un modelo para descargar';
           hint.selected = true;
           mSel.prepend(hint);
         }
       } else if (d.models && d.models.length > 0) {
+        mSel.disabled = false;
         d.models.forEach(function(m) {
           var opt = document.createElement('option');
           opt.value = m; opt.textContent = m;
@@ -988,13 +1144,21 @@ window.addEventListener('message', function(event) {
         });
       } else {
         var opt = document.createElement('option');
-        opt.value = ''; opt.textContent = '⚠️ sin modelos — abrí LM Studio';
+        opt.value = ''; opt.textContent = 'Sin modelos — abre LM Studio';
         mSel.appendChild(opt);
       }
       break;
 
     case 'connectionStatus':
-      if (d.provider === 'local') {
+      if (d.provider === 'agent') {
+        if (d.connected) {
+          dot.classList.add('on');
+          stTxt.textContent = 'Agent';
+        } else {
+          dot.classList.remove('on');
+          stTxt.textContent = 'Agent offline';
+        }
+      } else if (d.provider === 'local') {
         if (d.connected) {
           dot.classList.add('on');
           stTxt.textContent = 'Local';
@@ -1043,7 +1207,7 @@ window.addEventListener('message', function(event) {
 
     case 'contextAttached':
       ctxBar.classList.add('on');
-      ctxI.textContent = '📎 ' + d.name + (d.preview ? ' — ' + d.preview.substring(0, 60) + '…' : '');
+      ctxI.innerHTML = '<i class="codicon codicon-pin"></i> ' + d.name + (d.preview ? ' — ' + d.preview.substring(0, 60) + '…' : '');
       break;
 
     case 'contextRemoved':

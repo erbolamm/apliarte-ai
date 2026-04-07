@@ -5,3 +5,5 @@ out/
 .vscode-test/
 .DS_Store
 logs.md
+conversacion.md
+keys/

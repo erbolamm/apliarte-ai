@@ -8,10 +8,12 @@ import { WorkspaceTreeProvider } from './ui/workspaceView';
 import { QUICK_ACTIONS, executeQuickAction } from './ui/quickActions';
 import { showModelRecommendations } from './core/modelRecommender';
 import { setDepsDirectory } from './core/localInference';
+import { indexWorkspace } from './core/agentService';
+import { collectWorkspaceFiles } from './tools/executor';
 
 export function activate(context: vscode.ExtensionContext): void {
   logger.activate();
-  logger.info('ApliArte AI v0.4.0 — activando...');
+  logger.info('ApliArte AI v0.5.0 — activando...');
 
   // ── Local inference deps directory ─────────────────────
   setDepsDirectory(context.globalStorageUri.fsPath);
@@ -47,7 +49,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('apliarteAi.sendSelectedFiles', async () => {
       const files = wsTree.getCheckedFiles();
       if (files.length === 0) {
-        vscode.window.showWarningMessage('Seleccioná al menos un archivo del workspace.');
+        vscode.window.showWarningMessage('Selecciona al menos un archivo del workspace.');
         return;
       }
 
@@ -121,7 +123,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const providers = await detectProviders();
       if (providers.length === 0) {
         vscode.window.showWarningMessage(
-          'No se detectó LM Studio ni Ollama. Asegurate de tener uno corriendo.'
+          'No se detectó LM Studio ni Ollama. Asegúrate de tener uno corriendo.'
         );
         return;
       }
@@ -148,6 +150,49 @@ export function activate(context: vscode.ExtensionContext): void {
   // ── Model recommender ──────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand('apliarteAi.recommendModels', () => showModelRecommendations())
+  );
+
+  // ── Agent: Index workspace ─────────────────────────────
+  context.subscriptions.push(
+    vscode.commands.registerCommand('apliarteAi.indexWorkspace', async () => {
+      const config = vscode.workspace.getConfiguration('apliarteAi');
+      const endpoint = config.get<string>('agentEndpoint', '');
+      const apiKey = config.get<string>('agentApiKey', '');
+
+      if (!endpoint || !apiKey) {
+        vscode.window.showWarningMessage(
+          'Configura apliarteAi.agentEndpoint y apliarteAi.agentApiKey en Settings.'
+        );
+        return;
+      }
+
+      const folders = vscode.workspace.workspaceFolders;
+      if (!folders) {
+        vscode.window.showWarningMessage('No hay workspace abierto.');
+        return;
+      }
+
+      const workspaceId = Buffer.from(folders[0].uri.fsPath).toString('base64url').slice(0, 32);
+
+      await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: 'ApliArte AI: Indexando workspace…' },
+        async (progress) => {
+          progress.report({ message: 'Recolectando archivos…' });
+          const files = await collectWorkspaceFiles();
+          progress.report({ message: `Enviando ${files.length} archivos al agente…` });
+
+          try {
+            const result = await indexWorkspace(endpoint, apiKey, workspaceId, files);
+            vscode.window.showInformationMessage(
+              `Workspace indexado: ${result.indexed} archivos. @codebase listo.`
+            );
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Error indexando: ${msg}`);
+          }
+        }
+      );
+    })
   );
 
   logger.info('ApliArte AI activado correctamente.');

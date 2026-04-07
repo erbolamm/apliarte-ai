@@ -1,9 +1,24 @@
 # Changelog
 
+## [0.5.0] - 2026-04-07
+
+### Added
+- **Modo Agent (Cloud)**: Backend FastAPI propio con tool-calling (readFile, writeFile, listFiles, searchCode, runTerminal) y RAG con embeddings
+- Streaming SSE entre la extensión y el servidor Agent
+- Ejecución local de herramientas con confirmación del usuario para acciones destructivas
+- Guía de deployment paso a paso para VPS (server/README.md)
+- Comando "Indexar workspace (RAG)" para que el agente conozca tu proyecto
+- Hoja de ruta técnica detallada (ROADMAP.md)
+
+### Changed
+- Iconos de la interfaz: emojis reemplazados por codicon (iconos nativos de VS Code)
+- Textos de la UI normalizados a castellano estándar
+- Roadmap actualizado: MCP Client planificado para v0.6
+
 ## [0.4.0] - 2026-04-06
 
 ### Added
-- **Inferencia local sin dependencias**: Corre modelos de IA directamente en VS Code usando transformers.js v4 + WebGPU. No necesitás instalar LM Studio ni Ollama.
+- **Inferencia local sin dependencias**: Corre modelos de IA directamente en VS Code usando transformers.js v4 + WebGPU. No necesitas instalar LM Studio ni Ollama.
 - Selector de proveedor: "Local (sin instalar nada)" vs "LM Studio / Ollama"
 - Catálogo de modelos ONNX pre-verificados (Qwen 2.5 0.5B/1.5B/3B, SmolLM2 360M)
 - Descarga de modelos con barra de progreso integrada

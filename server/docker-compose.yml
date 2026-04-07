@@ -1,0 +1,31 @@
+services:
+  apliarte-code-agent:
+    build: .
+    container_name: apliarte-code-agent
+    restart: unless-stopped
+    ports:
+      - "8100:8100"
+    env_file:
+      - .env
+    networks:
+      - proxy_default  # Same network as ai-gateway, ollama, redis
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8100/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Reference — these are already running on the VPS via other compose files.
+  # Uncomment only if deploying standalone.
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+
+networks:
+  proxy_default:
+    external: true

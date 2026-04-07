@@ -11,17 +11,17 @@ interface PresetOption {
 
 const PRESETS: PresetOption[] = [
   {
-    label: '🚀 Lite (minimal)',
+    label: '$(rocket) Lite (minimal)',
     description: 'Solo personalidad (~5k tokens). Ideal para modelos ≤ 8B como Gemma 4',
     id: 'minimal',
   },
   {
-    label: '⚡ Medium (ecosystem-only)',
+    label: '$(zap) Medium (ecosystem-only)',
     description: 'Personalidad + skills básicos (~20k tokens). Para modelos 13B-30B',
     id: 'ecosystem-only',
   },
   {
-    label: '🔥 Full (full-gentleman)',
+    label: '$(flame) Full (full-gentleman)',
     description: 'Todo el ecosistema Gentleman (~49k tokens). Modelos grandes o APIs',
     id: 'full-gentleman',
   },
@@ -32,7 +32,7 @@ const PRESETS: PresetOption[] = [
  */
 export async function changePreset(): Promise<void> {
   const picked = await vscode.window.showQuickPick(PRESETS, {
-    placeHolder: 'Seleccioná el preset según tu modelo',
+    placeHolder: 'Selecciona el preset según tu modelo',
   });
 
   if (!picked) {
@@ -44,7 +44,7 @@ export async function changePreset(): Promise<void> {
 
   logger.info(`Preset cambiado a: ${picked.id}`);
   vscode.window.showInformationMessage(
-    `Preset cambiado a ${picked.label}. Ejecutá "ApliArte AI: Configurar IA Local" para aplicar.`
+    `Preset cambiado a ${picked.label}. Ejecuta "ApliArte AI: Configurar IA Local" para aplicar.`
   );
 }
 

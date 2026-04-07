@@ -159,7 +159,7 @@ function getRecommendations(hw: HardwareProfile): ModelRec[] {
     {
       name: 'Qwen 2.5 Coder 32B',
       size: '~22 GB', params: '32B', provider: 'LM Studio / Ollama',
-      why: 'NIVEL GPT-4 en código. El mejor modelo local para desarrollo. Si te cabe, usá este.',
+      why: 'NIVEL GPT-4 en código. El mejor modelo local para desarrollo. Si te cabe, usa este.',
       downloadUrl: 'lmstudio: qwen2.5-coder-32b-instruct | ollama: qwen2.5-coder:32b',
       contextLen: '32K', tasks: ['código', 'arquitectura', 'refactor', 'tests', 'docs'], minMem: 24,
     },
@@ -173,7 +173,7 @@ function getRecommendations(hw: HardwareProfile): ModelRec[] {
     {
       name: 'Llama 3.1 70B (Q4)',
       size: '~40 GB', params: '70B', provider: 'LM Studio / Ollama',
-      why: 'El gigante de Meta. Si tenés 64GB+ de RAM en Apple Silicon, es una bestia.',
+      why: 'El gigante de Meta. Si tienes 64GB+ de RAM en Apple Silicon, es una bestia.',
       downloadUrl: 'lmstudio: meta-llama-3.1-70b-instruct | ollama: llama3.1:70b',
       contextLen: '128K', tasks: ['todo', 'razonamiento complejo', 'arquitectura'], minMem: 48,
     },
@@ -193,8 +193,8 @@ export async function showModelRecommendations(): Promise<void> {
 
   const isAppleSilicon = hw.arch.includes('ARM64') && hw.os === 'macOS';
 
-  let md = `# 🧠 Modelos recomendados para tu equipo\n\n`;
-  md += `## 💻 Tu hardware\n`;
+  let md = `# Modelos recomendados para tu equipo\n\n`;
+  md += `## Tu hardware\n`;
   md += `| Propiedad | Valor |\n|---|---|\n`;
   md += `| Sistema | ${hw.os} ${hw.arch} |\n`;
   if (hw.chip) md += `| Chip | ${hw.chip} |\n`;
@@ -206,9 +206,9 @@ export async function showModelRecommendations(): Promise<void> {
 
   // Group by size
   const tiers: [string, number, number][] = [
-    ['🟢 Ligero — Respuestas rápidas', 0, 5],
-    ['🟡 Medio — Balance calidad/velocidad', 5, 15],
-    ['🔴 Pro — Máxima calidad (más lento)', 15, 999],
+    ['Ligero — Respuestas rápidas', 0, 5],
+    ['Medio — Balance calidad/velocidad', 5, 15],
+    ['Pro — Máxima calidad (más lento)', 15, 999],
   ];
 
   for (const [label, minParams, maxParams] of tiers) {
@@ -230,26 +230,26 @@ export async function showModelRecommendations(): Promise<void> {
   }
 
   md += `---\n\n`;
-  md += `## ⚡ Consejo rápido\n\n`;
+  md += `## Consejo rápido\n\n`;
 
   if (hw.ramGB <= 8) {
-    md += `Con ${hw.ramGB}GB de RAM, usá modelos de **1B-4B** parámetros. `;
+    md += `Con ${hw.ramGB}GB de RAM, usa modelos de **1B-4B** parámetros. `;
     md += `**Gemma 3 4B** es tu mejor opción — buen español y rápido.\n`;
   } else if (hw.ramGB <= 16) {
-    md += `Con ${hw.ramGB}GB, podés usar modelos de hasta **12B**. `;
+    md += `Con ${hw.ramGB}GB, puedes usar modelos de hasta **12B**. `;
     md += `**Qwen 2.5 Coder 7B** para código puro, **Gemma 4 12B** para todo.\n`;
   } else if (hw.ramGB <= 32) {
-    md += `Con ${hw.ramGB}GB, sos candidato a **Qwen 2.5 Coder 32B** — `;
-    md += `nivel GPT-4 en código, corriendo 100% en tu máquina. Hacelo.\n`;
+    md += `Con ${hw.ramGB}GB, puedes usar **Qwen 2.5 Coder 32B** — `;
+    md += `nivel GPT-4 en código, corriendo 100% en tu máquina. Hazlo.\n`;
   } else {
-    md += `Con ${hw.ramGB}GB tenés acceso a todo. **Qwen 2.5 Coder 32B** para código, `;
+    md += `Con ${hw.ramGB}GB tienes acceso a todo. **Qwen 2.5 Coder 32B** para código, `;
     md += `**Llama 3.1 70B** para razonamiento avanzado.\n`;
   }
 
-  md += `\n## 📥 Cómo instalar\n\n`;
-  md += `1. Abrí **LM Studio** → buscá el modelo → "Download"\n`;
+  md += `\n## Cómo instalar\n\n`;
+  md += `1. Abre **LM Studio** → busca el modelo → "Download"\n`;
   md += `2. O con **Ollama**: \`ollama pull nombre-del-modelo\`\n`;
-  md += `3. Cargá el modelo y ApliArte AI Chat lo detecta automáticamente\n`;
+  md += `3. Carga el modelo y ApliArte AI Chat lo detecta automáticamente\n`;
 
   const doc = await vscode.workspace.openTextDocument({ content: md, language: 'markdown' });
   await vscode.window.showTextDocument(doc, { preview: true });
