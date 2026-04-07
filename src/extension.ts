@@ -13,7 +13,7 @@ import { collectWorkspaceFiles } from './tools/executor';
 
 export function activate(context: vscode.ExtensionContext): void {
   logger.activate();
-  logger.info('ApliArte AI v0.5.0 — activando...');
+  logger.info('ApliArte AI v0.5.1 — activando...');
 
   // ── Local inference deps directory ─────────────────────
   setDepsDirectory(context.globalStorageUri.fsPath);

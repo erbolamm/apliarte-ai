@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1] - 2026-04-07
+
+### Fixed
+- Nuevo icono: chevron ApliArte + chat bubble (reemplaza el chip+A viejo)
+- Sidebar usa iconos dark/light SVG según el tema
+- icon.svg limpio sin restos del diseño anterior
+
 ## [0.5.0] - 2026-04-07
 
 ### Added
