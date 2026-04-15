@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1] - 2026-04-15
+
+### Fixed
+- Welcome screen contextual: guía paso a paso según el proveedor seleccionado
+- Botón "Descargar modelo recomendado" visible desde el arranque en modo Local
+- UX: mensajes de guía para modo Remote offline y Agent sin configurar
+
 ## [0.6.0] - 2026-04-15
 
 ### Added
