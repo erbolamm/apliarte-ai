@@ -2,7 +2,7 @@
   "name": "apliarte-ai",
   "displayName": "ApliArte AI — Chat de IA Local",
   "description": "Chat de IA local para VS Code. Corre modelos directo en tu máquina o conecta LM Studio/Ollama. Sin APIs externas, 100% privado, 0 coste.",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "icon": "icon.png",
   "publisher": "apliarte",
   "author": {
@@ -263,6 +263,11 @@
           "type": "string",
           "default": "",
           "description": "API key para conectar con el agente remoto"
+        },
+        "apliarteAi.engramEndpoint": {
+          "type": "string",
+          "default": "http://localhost:4200",
+          "description": "Endpoint HTTP del servidor Engram MCP para memoria persistente cross-session"
         }
       }
     }

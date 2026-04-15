@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.6.0] - 2026-04-15
+
+### Added
+- **Persistencia multi-conversación**: historial guardado entre sesiones con nombres automáticos, timestamps y preview. Hasta 50 conversaciones en paralelo
+- **Sidebar de conversaciones**: listado colapsable con cada sesión, contador de mensajes y preview del primer mensaje
+- **Gestión completa de conversaciones**: crear nueva, cargar, renombrar inline (click en ✏️), eliminar y exportar por separado
+- **Exportar todo a Markdown**: una sola acción exporta todas las conversaciones en un documento estructurado
+- **Panel de configuración inline**: modal dentro del chat para configurar endpoints, API keys, preset e idioma sin abrir VS Code Settings
+- **Engram MCP integrado**: panel de búsqueda y guardado de memorias persistentes. Badge 🧠 indica cuando Engram está conectado
+- **Welcome screen contextual**: la pantalla de inicio se adapta al proveedor seleccionado con guía paso a paso
+- **Botón de descarga prominente**: en modo Local aparece un botón "Descargar modelo recomendado" para arrancar sin adivinar
+- **Menú export dropdown**: opción de exportar la conversación actual o todas a la vez
+- Nueva configuración `apliarteAi.engramEndpoint` para conectar con el servidor Engram MCP
+
+### Changed
+- Migración automática del historial plano anterior (v0.5.x) al nuevo sistema multi-conversación
+- Layout en dos columnas: sidebar + área de chat independiente
+
+### Fixed
+- La extensión ya no pierde el historial al cerrar y reabrir VS Code (persistencia real con `globalState`)
+
 ## [0.5.3] - 2026-04-07
 
 ### Added
