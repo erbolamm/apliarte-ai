@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.3] - 2026-04-17
+
+### Fixed
+- Barra de progreso de descarga de modelos locales: ahora se muestra correctamente durante toda la descarga
+- Descarga de modelo desde botón "Descargar modelo recomendado" fallaba silenciosamente si las dependencias (transformers.js) no estaban instaladas
+- Manejo de estados intermedios de descarga (`initiate`, `ready`, `download`) que antes se ignoraban
+- Mensaje de error visible en la pantalla de bienvenida cuando la descarga falla, en lugar de esconder la barra sin feedback
+
+## [0.6.2] - 2026-04-16
+
+> Bump de versión sin cambios funcionales.
+
 ## [0.6.1] - 2026-04-15
 
 ### Fixed
