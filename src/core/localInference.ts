@@ -129,9 +129,11 @@ async function ensureImported(): Promise<void> {
     throw new Error('Las dependencias de inferencia local no están instaladas. Selecciona modo Local para instalarlas.');
   }
 
-  // Dynamic import from the deps directory
+  // Dynamic import from the deps directory.
+  // Must point to the concrete CJS entry point — Node cannot resolve directory imports
+  // in ESM context. transformers.node.cjs is the correct Node.js build.
   const depsDir = getDepsDir();
-  const transformersPath = join(depsDir, 'node_modules', '@huggingface', 'transformers');
+  const transformersPath = join(depsDir, 'node_modules', '@huggingface', 'transformers', 'dist', 'transformers.node.cjs');
 
   // Add to module resolution paths
   const Module = require('module');

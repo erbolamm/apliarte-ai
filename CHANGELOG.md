@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.4] - 2026-04-18
+
+### Fixed
+- Error al iniciar inferencia local: `import()` de directorio no soportado en contexto ESM de Node.js — ahora apunta al entry point concreto `dist/transformers.node.cjs`
+
 ## [0.6.3] - 2026-04-17
 
 ### Fixed
