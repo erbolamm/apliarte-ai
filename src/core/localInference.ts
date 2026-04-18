@@ -36,8 +36,8 @@ export const AVAILABLE_MODELS: LocalModelEntry[] = [
     size: '~1GB',
   },
   {
-    id: 'onnx-community/Qwen2.5-3B-Instruct',
-    label: 'Qwen 2.5 3B (mejor calidad)',
+    id: 'onnx-community/Qwen2.5-Coder-3B-Instruct',
+    label: 'Qwen 2.5 Coder 3B (mejor calidad)',
     size: '~2GB',
   },
   {

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.5] - 2026-04-18
+
+### Fixed
+- Modelo `Qwen2.5-3B-Instruct` eliminado del catálogo — el repo en HuggingFace requiere autenticación (401). Reemplazado por `Qwen2.5-Coder-3B-Instruct`, que es público y más apropiado para asistente de código
+
 ## [0.6.4] - 2026-04-18
 
 ### Fixed
