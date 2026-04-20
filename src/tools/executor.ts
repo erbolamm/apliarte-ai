@@ -303,37 +303,54 @@ async function runTerminal(command: string): Promise<string> {
   });
 }
 
+const TEXT_EXTENSIONS = new Set([
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.py', '.go', '.rs', '.java', '.c', '.cpp', '.h', '.hpp',
+  '.html', '.css', '.scss', '.less', '.vue', '.svelte',
+  '.json', '.yaml', '.yml', '.toml', '.xml',
+  '.md', '.txt', '.sh', '.bash', '.zsh',
+  '.sql', '.graphql', '.prisma',
+  '.env', '.gitignore', '.dockerignore',
+  'Dockerfile', 'Makefile',
+]);
+
+async function listWorkspaceFiles(root: string): Promise<string[]> {
+  const { execFile } = require('child_process') as typeof import('child_process');
+  try {
+    const output = await new Promise<string>((resolve, reject) => {
+      execFile('rg', ['--files', '--follow'], { cwd: root, maxBuffer: 10 * 1024 * 1024 }, (err, stdout) => {
+        if (err && !stdout) { reject(err); return; }
+        resolve(stdout);
+      });
+    });
+    return output.split('\n').filter(Boolean).map(f => path.resolve(root, f));
+  } catch {
+    // rg not available — fallback to findFiles
+    const uris = await vscode.workspace.findFiles('**/*', '{**/node_modules/**,**/dist/**}', 2000);
+    return uris.map(u => u.fsPath);
+  }
+}
+
 /**
  * Collect workspace files for indexing (RAG).
- * Returns file paths + contents for text files under a size limit.
+ * Uses rg --files when available (respects .gitignore), falls back to findFiles.
  */
 export async function collectWorkspaceFiles(): Promise<Array<{ path: string; content: string }>> {
   const root = getWorkspaceRoot();
-  const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**', 2000);
+  const filePaths = await listWorkspaceFiles(root);
   const results: Array<{ path: string; content: string }> = [];
 
-  const textExtensions = new Set([
-    '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-    '.py', '.go', '.rs', '.java', '.c', '.cpp', '.h', '.hpp',
-    '.html', '.css', '.scss', '.less', '.vue', '.svelte',
-    '.json', '.yaml', '.yml', '.toml', '.xml',
-    '.md', '.txt', '.sh', '.bash', '.zsh',
-    '.sql', '.graphql', '.prisma',
-    '.env', '.gitignore', '.dockerignore',
-    'Dockerfile', 'Makefile',
-  ]);
-
-  for (const file of files) {
-    const ext = path.extname(file.fsPath).toLowerCase();
-    const basename = path.basename(file.fsPath);
-    if (!textExtensions.has(ext) && !textExtensions.has(basename)) continue;
+  for (const fsPath of filePaths) {
+    const ext = path.extname(fsPath).toLowerCase();
+    const basename = path.basename(fsPath);
+    if (!TEXT_EXTENSIONS.has(ext) && !TEXT_EXTENSIONS.has(basename)) continue;
 
     try {
-      const bytes = await vscode.workspace.fs.readFile(file);
-      if (bytes.length > 100000) continue; // Skip files > 100KB
+      const uri = vscode.Uri.file(fsPath);
+      const bytes = await vscode.workspace.fs.readFile(uri);
+      if (bytes.length > 100000) continue;
       const content = Buffer.from(bytes).toString('utf-8');
-      const relPath = path.relative(root, file.fsPath);
-      results.push({ path: relPath, content });
+      results.push({ path: path.relative(root, fsPath), content });
     } catch {
       // skip unreadable
     }

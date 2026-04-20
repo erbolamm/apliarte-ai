@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 
 export interface LocalProvider {
   name: string;
-  type: 'lmstudio' | 'ollama';
+  type: 'lmstudio' | 'ollama' | 'jan';
   endpoint: string;
   models: string[];
 }
@@ -31,13 +31,19 @@ export async function detectProviders(): Promise<LocalProvider[]> {
     providers.push(ollama);
   }
 
+  // Detectar Jan (OpenAI-compatible, puerto 1337)
+  const jan = await tryEndpoint('Jan', 'jan', 'http://localhost:1337/v1/models');
+  if (jan) {
+    providers.push(jan);
+  }
+
   logger.info(`Proveedores detectados: ${providers.length}`);
   return providers;
 }
 
 async function tryEndpoint(
   name: string,
-  type: 'lmstudio' | 'ollama',
+  type: 'lmstudio' | 'ollama' | 'jan',
   url: string
 ): Promise<LocalProvider | null> {
   try {
@@ -64,7 +70,7 @@ async function tryEndpoint(
 }
 
 function extractModelNames(data: Record<string, unknown>, type: string): string[] {
-  if (type === 'lmstudio' && Array.isArray(data.data)) {
+  if ((type === 'lmstudio' || type === 'jan') && Array.isArray(data.data)) {
     return (data.data as Array<{ id?: string }>).map((m) => m.id ?? 'unknown');
   }
   if (type === 'ollama' && Array.isArray(data.models)) {

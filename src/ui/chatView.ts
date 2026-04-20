@@ -868,7 +868,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
     const endpoint = await this._resolveRemoteEndpoint();
     const connected = await checkConnection(endpoint);
-    const name = endpoint.includes('11434') ? 'Ollama' : 'LM Studio';
+    const name = endpoint.includes('11434') ? 'Ollama' : endpoint.includes('1337') ? 'Jan' : 'LM Studio';
     this._post({ type: 'connectionStatus', connected, provider: 'remote', name });
   }
 
@@ -898,15 +898,19 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     const results = await Promise.allSettled([
       checkConnection(lmstudio),
       checkConnection(ollamaV1),
+      checkConnection('http://localhost:1337/v1'),
     ]);
 
     const lmOk     = results[0].status === 'fulfilled' && results[0].value;
     const ollamaOk = results[1].status === 'fulfilled' && results[1].value;
+    const janOk    = results[2].status === 'fulfilled' && results[2].value;
 
     if (lmOk) {
       this._remoteEndpoint = lmstudio;
     } else if (ollamaOk) {
       this._remoteEndpoint = ollamaV1;
+    } else if (janOk) {
+      this._remoteEndpoint = 'http://localhost:1337/v1';
     } else {
       this._remoteEndpoint = lmstudio;
     }

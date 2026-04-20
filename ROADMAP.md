@@ -160,7 +160,7 @@ const SIGNATURE_PATTERNS: Record<string, string[]> = {
 
 Añadir al `ToolRegistry` como built-in tool disponible en Agent y Remote.
 
-**2c — `indexWorkspace` refactorizado** (PENDIENTE)
+**2c — `indexWorkspace` refactorizado** ✅ COMPLETO
 
 En `src/core/agentService.ts`, la función `indexWorkspace` actualmente usa `vscode.workspace.findFiles`. Refactorizar para que use `rg --files` cuando disponible:
 
@@ -188,7 +188,7 @@ async function listWorkspaceFiles(root: string): Promise<string[]> {
 - [x] Máximo 3 alternativas por bloque
 - [x] Deshabilitado en modo Local
 
-#### Feature 4 — Jan como proveedor Remote (PENDIENTE)
+#### Feature 4 — Jan como proveedor Remote ✅ COMPLETO
 
 Jan es una app local de IA con API OpenAI-compatible en `http://localhost:1337/v1`.
 Misma integración que LM Studio/Ollama — solo hay que agregarlo a la detección automática.
