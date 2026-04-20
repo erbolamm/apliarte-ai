@@ -294,15 +294,50 @@
           "additionalProperties": {
             "type": "object",
             "properties": {
-              "transport": { "type": "string", "enum": ["stdio", "http"] },
-              "command": { "type": "string", "description": "Ejecutable (solo transport stdio)" },
-              "args": { "type": "array", "items": { "type": "string" }, "description": "Argumentos (solo stdio)" },
-              "env": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Variables de entorno (solo stdio)" },
-              "cwd": { "type": "string", "description": "Directorio de trabajo (solo stdio)" },
-              "url": { "type": "string", "description": "URL del servidor (solo transport http)" },
-              "headers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Headers HTTP (solo http)" }
+              "transport": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http"
+                ]
+              },
+              "command": {
+                "type": "string",
+                "description": "Ejecutable (solo transport stdio)"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Argumentos (solo stdio)"
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Variables de entorno (solo stdio)"
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Directorio de trabajo (solo stdio)"
+              },
+              "url": {
+                "type": "string",
+                "description": "URL del servidor (solo transport http)"
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Headers HTTP (solo http)"
+              }
             },
-            "required": ["transport"]
+            "required": [
+              "transport"
+            ]
           }
         }
       }
@@ -317,7 +352,7 @@
     "package": "vsce package"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.19.39",
     "@types/vscode": "^1.93.0",
     "@vscode/codicons": "^0.0.45",
     "esbuild": "^0.21.0",
