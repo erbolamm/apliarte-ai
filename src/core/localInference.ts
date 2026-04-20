@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import type { ChatMessage, StreamOptions, ModelInfo } from './llmService';
 import { execFile } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,6 +14,7 @@ let _generator: any = null;
 let _currentModelId: string | null = null;
 let _loading = false;
 let _depsDir: string | null = null;
+let _modelsDir: string | null = null;
 
 export interface LocalModelEntry {
   id: string;
@@ -53,6 +54,19 @@ export const AVAILABLE_MODELS: LocalModelEntry[] = [
  */
 export function setDepsDirectory(dir: string): void {
   _depsDir = dir;
+}
+
+/**
+ * Set the directory where AI models are stored.
+ * Pass empty string to use the default (inside globalStorageUri).
+ */
+export function setModelsDirectory(dir: string): void {
+  _modelsDir = dir || null;
+  logger.info(`[localInference] modelsDir = ${_modelsDir ?? '(default HF cache)'}`);
+}
+
+export function getModelsDirectory(): string | null {
+  return _modelsDir;
 }
 
 function getDepsDir(): string {
@@ -175,7 +189,7 @@ export async function loadModel(
       _currentModelId = null;
     }
 
-    _generator = await _pipelineFn('text-generation', modelId, {
+    const pipelineOpts: Record<string, unknown> = {
       dtype: 'q4',
       progress_callback: (data: Record<string, unknown>) => {
         if (onProgress && data.status) {
@@ -186,7 +200,12 @@ export async function loadModel(
           });
         }
       },
-    });
+    };
+    if (_modelsDir) {
+      pipelineOpts.cache_dir = _modelsDir;
+    }
+
+    _generator = await _pipelineFn('text-generation', modelId, pipelineOpts);
 
     _currentModelId = modelId;
     logger.info(`Modelo local cargado: ${modelId}`);
@@ -223,6 +242,9 @@ export async function streamChatLocal(
     options.signal.addEventListener('abort', () => { aborted = true; }, { once: true });
   }
 
+  let tokenCount = 0;
+  const startTime = Date.now();
+
   await _generator(messages, {
     max_new_tokens: 2048,
     temperature: options?.temperature ?? 0.7,
@@ -232,14 +254,113 @@ export async function streamChatLocal(
       skip_special_tokens: true,
       callback_function: (text: string) => {
         if (aborted) return;
+        tokenCount++;
         onChunk(text);
       },
     }),
   });
+
+  const elapsed = (Date.now() - startTime) / 1000;
+  if (!aborted && elapsed > 0.5 && options?.onStats) {
+    options.onStats({
+      tokensPerSecond: Math.round((tokenCount / elapsed) * 10) / 10,
+      totalTokens: tokenCount,
+      model: _currentModelId ?? '',
+    });
+  }
+}
+
+const MODEL_EXTS = new Set(['.onnx', '.safetensors', '.gguf', '.bin']);
+
+function _hasModelFiles(dir: string): boolean {
+  try {
+    return readdirSync(dir).some((f) => MODEL_EXTS.has(f.slice(f.lastIndexOf('.'))));
+  } catch { return false; }
+}
+
+/**
+ * Scan a directory for locally cached HuggingFace models.
+ *
+ * Supports three layouts:
+ *   1. HF cache:   models--{org}--{name}/snapshots/<hash>/  (verifies snapshots exist)
+ *   2. Plain repo: {name}/config.json + model files
+ *   3. Org/repo:   {org}/{name}/config.json + model files  (one level deeper)
+ */
+export function scanModelsDir(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const found: string[] = [];
+  let entries: string[] = [];
+  try {
+    entries = readdirSync(dir);
+  } catch (err) {
+    logger.warn(`[localInference] scanModelsDir failed reading ${dir}: ${(err as Error).message}`);
+    return [];
+  }
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry);
+    try {
+      const st = statSync(fullPath);
+      if (!st.isDirectory()) continue;
+
+      // ── Layout 1: HF cache (models--ORG--NAME) ──────────────
+      if (entry.startsWith('models--')) {
+        const parts = entry.slice('models--'.length).split('--');
+        if (parts.length >= 2) {
+          // Only include if snapshots directory has content (model actually downloaded)
+          const snapshotsDir = join(fullPath, 'snapshots');
+          if (existsSync(snapshotsDir)) {
+            try {
+              const hashes = readdirSync(snapshotsDir).filter((h) => {
+                try { return statSync(join(snapshotsDir, h)).isDirectory(); } catch { return false; }
+              });
+              if (hashes.length > 0) found.push(parts.join('/'));
+            } catch { found.push(parts.join('/')); } // can't read snapshots, assume it's there
+          }
+        }
+        continue;
+      }
+
+      // ── Layout 2: plain HF repo (dir has config.json + model files) ──
+      const hasConfig = existsSync(join(fullPath, 'config.json'));
+      if (hasConfig && _hasModelFiles(fullPath)) {
+        found.push(entry);
+        continue;
+      }
+
+      // ── Layout 3: org/repo (one level deeper) ────────────────
+      try {
+        for (const sub of readdirSync(fullPath)) {
+          const subPath = join(fullPath, sub);
+          try {
+            if (!statSync(subPath).isDirectory()) continue;
+            if (existsSync(join(subPath, 'config.json')) && _hasModelFiles(subPath)) {
+              found.push(`${entry}/${sub}`);
+            }
+          } catch { /* skip */ }
+        }
+      } catch { /* skip */ }
+    } catch { /* skip unreadable */ }
+  }
+
+  return [...new Set(found)];
 }
 
 export async function listLocalModels(): Promise<ModelInfo[]> {
-  return AVAILABLE_MODELS.map((m) => ({ id: m.id }));
+  const catalog = AVAILABLE_MODELS.map((m) => ({ id: m.id }));
+
+  // Merge with models found in the user's modelsDir (not in catalog)
+  if (_modelsDir) {
+    const scanned = scanModelsDir(_modelsDir);
+    const catalogIds = new Set(catalog.map((m) => m.id));
+    for (const id of scanned) {
+      if (!catalogIds.has(id)) {
+        catalog.push({ id });
+      }
+    }
+  }
+
+  return catalog;
 }
 
 export async function unloadModel(): Promise<void> {

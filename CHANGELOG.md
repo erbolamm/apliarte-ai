@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.9.0] - 2026-04-20
+
+### Added
+- **Monitor de rendimiento local**: badge `t/s` en el toolbar al terminar cada respuesta — verde ≥ 8, naranja 4–8, rojo < 4. Status bar de VS Code muestra `⚡ 12.3 t/s` 8 segundos post-respuesta
+- **Sugerencia de cambio de modelo**: si la generación cae por debajo de 8 t/s, aparece un banner no invasivo sobre la barra de input con botón para cambiar al modelo más rápido. Se descarta con ✕ y no vuelve a aparecer en 10 minutos
+- **Botón de carpeta en toolbar**: ícono `📁` visible en modo Local, siempre a mano, sin necesidad de abrir Settings
+- **Búsqueda de modelos con ripgrep**: `searchCode` (modo Agent) usa `rg` cuando está disponible — respeta `.gitignore` nativamente, sin ruido de `node_modules`/`dist`. Fallback automático si `rg` no está instalado
+- **Alternativas de código "Multiverso"**: botón `⟳ Alt` en cada bloque de código — genera una variante con enfoque diferente, aparece como pestaña `❶ ❷ ❸` sin contaminar el historial. Copiar/Insertar/Aplicar siempre usan la pestaña activa. Máximo 3 alternativas. Deshabilitado en modo Local
+- **Scan de modelos mejorado**: detecta 3 layouts (HF cache con verificación de snapshots, repo plano, estructura `org/model/`), soporte para `.gguf`/`.bin`/`.safetensors`/`.onnx`, recursivo un nivel extra. Modelos encontrados en tu carpeta aparecen en el selector bajo "── En tu carpeta ──"
+
+## [0.8.0] - 2026-04-20
+
+### Added
+- **HF Hub browser**: buscador integrado de modelos ONNX en HuggingFace — busca por nombre, filtra por descargas, descarga directo a tu carpeta de modelos sin salir de VS Code
+- **Gestión de carpeta de modelos**: carpeta única para todos los modelos locales (`apliarteAi.modelsDir`). Picker con `showOpenDialog`, scan automático de repos HF cache y planos. El modo Local no arranca hasta elegir carpeta
+- **UI de tool calls mejorada**: bloque colapsable con preview de argumentos y resultado de cada herramienta — separado visualmente del texto del LLM
+- **MCP Resources y Prompts** (Fase 6): `resources/list` + `resources/read` para adjuntar recursos como contexto; `prompts/list` + `prompts/get` para acciones rápidas predefinidas desde servidores MCP
+- **Multi-idioma EN/ES real**: `applyLang()` con mapa de 35+ keys, activación instantánea sin reiniciar VS Code; selector en settings cambia idioma en vivo
+- **RAG auto-index al abrir**: indexa el workspace automáticamente al iniciar en modo Agent (background, sin interrumpir)
+- **RAG incremental al guardar**: actualiza el índice RAG al guardar archivos de texto (debounced 3s, ignora node_modules/dist/etc.)
+- **MCP local quick-setup**: botones preconfigurados en Settings para añadir `@modelcontextprotocol/server-memory` (memoria) y `@modelcontextprotocol/server-filesystem` (archivos) con un solo click
+- **Botones de soporte en Settings**: PayPal, Ko-fi y Twitch Tip visibles desde la configuración inline
+
+### Changed
+- Agente remoto renombrado a "Agente Remoto" genérico — sin referencias hardcoded a ningún servidor específico
+- Settings de Engram MCP marcado como obsoleto (`markdownDeprecationMessage`) — migrar a `apliarteAi.mcpServers`
+- Carpeta de modelos requiere selección antes de usar modo Local
+
+### Fixed
+- Eliminar conversación no funcionaba: `confirm()` está bloqueado en webviews de VS Code y retorna `undefined`. Reemplazado por patrón de doble click (primer click → icono ⚠️ 2,5s → segundo click confirma)
+
+## [0.7.0] - 2026-04-19
+
+### Added
+- **MCP Client genérico** — ApliArte AI se convierte en un hub extensible de herramientas de IA
+- **Transporte stdio**: spawn de procesos locales con SIGTERM/SIGKILL al cerrar. Compatible con cualquier servidor MCP que use stdio
+- **Transporte HTTP (MCP Streamable HTTP)**: cliente HTTP con session ID para servidores MCP remotos
+- **Gestor multi-server** (`McpServerManager`): ciclo de vida de N servidores con `sync`/`restart`/`onDidChange`
+- **Descubrimiento dinámico**: `tools/list` por servidor, namespace `{server}.{toolName}`, `ToolRegistry` unificado (builtin + MCP)
+- **Tool-calling en modo Remote**: `streamChatWithTools` con loop hasta 10 iteraciones, protocolo OpenAI. LM Studio y Ollama ya soportan tool-calling
+- **Tool-calling en modo Agent**: tools MCP disponibles en el backend vía el mismo registry unificado
+- **Configuración `apliarteAi.mcpServers`** con JSON Schema completo — transporte, args, env, cwd, headers
+- **Comandos de gestión MCP**: `ApliArte AI: Reiniciar servidor MCP` y `ApliArte AI: Estado de servidores MCP`
+- **Badges de estado MCP** en la toolbar del chat, panel colapsable de tools por servidor
+- **Migración automática** de `apliarteAi.engramEndpoint` → `apliarteAi.mcpServers.engram`
+- **Nota inline en modo Local** cuando el modelo pequeño no soporta tool-calling
+- Timeout por herramienta: 30s
+
+### Changed
+- `engramService.ts` eliminado — interacción con Engram 100% vía MCP tool-calling del LLM
+- Panel UI de Engram eliminado — estado visible en badges MCP
+- `executor.ts` delega al `ToolRegistry` unificado en vez de implementar herramientas directamente
+
+### Breaking
+- `apliarteAi.engramEndpoint` deprecado — migrar a `apliarteAi.mcpServers`. La migración automática cubre la mayoría de los casos
+
 ## [0.6.5] - 2026-04-18
 
 ### Fixed

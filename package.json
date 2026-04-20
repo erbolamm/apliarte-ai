@@ -2,7 +2,7 @@
   "name": "apliarte-ai",
   "displayName": "ApliArte AI — Chat de IA Local",
   "description": "Chat de IA local para VS Code. Corre modelos directo en tu máquina o conecta LM Studio/Ollama. Sin APIs externas, 100% privado, 0 coste.",
-  "version": "0.6.5",
+  "version": "0.9.0",
   "icon": "icon.png",
   "publisher": "apliarte",
   "author": {
@@ -130,6 +130,21 @@
         "command": "apliarteAi.indexWorkspace",
         "title": "ApliArte AI: Indexar workspace (RAG)",
         "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "apliarteAi.chooseModelsDir",
+        "title": "ApliArte AI: Elegir carpeta de modelos",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "apliarteAi.restartMcpServer",
+        "title": "ApliArte AI: Reiniciar servidor MCP",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "apliarteAi.showMcpStatus",
+        "title": "ApliArte AI: Estado de servidores MCP",
+        "icon": "$(pulse)"
       }
     ],
     "menus": {
@@ -231,6 +246,11 @@
           ],
           "description": "Preset de configuración según la capacidad del modelo local"
         },
+        "apliarteAi.modelsDir": {
+          "type": "string",
+          "default": "",
+          "description": "Carpeta donde se guardan todos los modelos de IA locales. Vacío = carpeta por defecto en el almacenamiento de la extensión. Podés apuntar a un disco externo, tarjeta SD o cualquier ruta."
+        },
         "apliarteAi.lmstudioEndpoint": {
           "type": "string",
           "default": "http://localhost:1234/v1",
@@ -257,17 +277,35 @@
         "apliarteAi.agentEndpoint": {
           "type": "string",
           "default": "",
-          "description": "URL del servidor ApliArte Code Agent (ej: https://agent.apliarte.com). Dejar vacío para desactivar."
+          "description": "URL de tu servidor de agente remoto (ej: https://mi-servidor.com). Dejá vacío para desactivar el modo Agente."
         },
         "apliarteAi.agentApiKey": {
           "type": "string",
           "default": "",
-          "description": "API key para conectar con el agente remoto"
+          "description": "API key de tu servidor de agente remoto"
         },
         "apliarteAi.engramEndpoint": {
           "type": "string",
-          "default": "http://localhost:4200",
-          "description": "Endpoint HTTP del servidor Engram MCP para memoria persistente cross-session"
+          "default": "",
+          "markdownDeprecationMessage": "**Obsoleto** — usá `apliarteAi.mcpServers` en su lugar. Se migra automáticamente si está configurado."
+        },
+        "apliarteAi.mcpServers": {
+          "type": "object",
+          "default": {},
+          "description": "Servidores MCP conectados. Cada entrada define transport (stdio o http) y su configuración. Ejemplo: { \"filesystem\": { \"transport\": \"stdio\", \"command\": \"npx\", \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"${workspaceFolder}\"] } }",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "transport": { "type": "string", "enum": ["stdio", "http"] },
+              "command": { "type": "string", "description": "Ejecutable (solo transport stdio)" },
+              "args": { "type": "array", "items": { "type": "string" }, "description": "Argumentos (solo stdio)" },
+              "env": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Variables de entorno (solo stdio)" },
+              "cwd": { "type": "string", "description": "Directorio de trabajo (solo stdio)" },
+              "url": { "type": "string", "description": "URL del servidor (solo transport http)" },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Headers HTTP (solo http)" }
+            },
+            "required": ["transport"]
+          }
         }
       }
     }

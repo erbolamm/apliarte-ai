@@ -305,7 +305,7 @@
   <header class="hero">
     <img src="https://raw.githubusercontent.com/erbolamm/apliarte-ai/main/icon.png" alt="ApliArte AI" />
     <h1>ApliArte AI</h1>
-    <p>Chat de IA para VS Code. Corre modelos en tu máquina, conecta servidores locales, o despliega tu propio backend con tool-calling. Tres modos, tú eliges.</p>
+    <p>Chat de IA para VS Code. Modelos locales, LM Studio/Ollama o tu propio backend con tool-calling. MCP client integrado, alternativas de código, monitor de rendimiento. v0.9.0</p>
 
     <div class="hero-badges">
       <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">
@@ -391,6 +391,30 @@
           <h3><span class="emoji">🎯</span> Recomendador de modelos</h3>
           <p>Detecta tu hardware y sugiere el mejor modelo según tu RAM, CPU y GPU.</p>
         </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🔧</span> MCP Client genérico</h3>
+          <p>Conecta cualquier servidor MCP (memoria, filesystem, GitHub, bases de datos) via stdio o HTTP. Tool-calling en modo Remote y Agent.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">📦</span> Gestión de modelos locales</h3>
+          <p>Carpeta propia para todos tus modelos. Escanea discos externos, tarjetas SD y caché de HuggingFace automáticamente. Browser integrado de HF Hub.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">💬</span> Persistencia multi-conversación</h3>
+          <p>Hasta 50 conversaciones en paralelo, con nombres automáticos, timestamps y búsqueda. El historial sobrevive al reiniciar VS Code.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">⚡</span> Monitor de rendimiento</h3>
+          <p>Badge de tokens/segundo en tiempo real. Sugerencia automática de cambio de modelo si la generación va lenta. Status bar integrado.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🔀</span> Alternativas de código</h3>
+          <p>Botón "Alt" en cada bloque de código — genera una variante con otro enfoque. Compará pestañas ❶ ❷ ❸ sin contaminar el historial.</p>
+        </div>
+        <div class="feature-card">
+          <h3><span class="emoji">🌐</span> Multilingüe EN/ES</h3>
+          <p>Interfaz completa en español e inglés. Cambia el idioma en tiempo real desde Settings, sin reiniciar.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -423,9 +447,9 @@
             <td></td>
           </tr>
           <tr>
-            <td>Qwen 2.5 3B Instruct</td>
+            <td>Qwen 2.5 Coder 3B Instruct</td>
             <td>~2 GB</td>
-            <td>Mejor calidad, necesita más RAM</td>
+            <td>Mejor calidad para código, necesita más RAM</td>
             <td></td>
           </tr>
           <tr>
@@ -453,12 +477,12 @@
           <p>Local, Remoto (LM Studio / Ollama) o Agent (tu propio servidor)</p>
         </div>
         <div class="step">
-          <h3>Selecciona un modelo</h3>
-          <p>Del catálogo local, de tu servidor, o del backend Agent</p>
+          <h3>Elige carpeta de modelos</h3>
+          <p>Apunta a tu carpeta de IAs — detecta modelos automáticamente, incluso en discos externos</p>
         </div>
         <div class="step">
           <h3>Chatea con tu código</h3>
-          <p>Adjunta archivos, haz preguntas, aplica cambios directo</p>
+          <p>Adjunta archivos, genera alternativas, conecta herramientas MCP y aplica cambios directo</p>
         </div>
       </div>
     </div>

@@ -37,7 +37,8 @@ La mayoría de extensiones de IA para VS Code requieren una API key de pago o en
 - **Sin internet**: Todo corre en tu máquina. Tu código nunca sale de tu ordenador.
 - **Sin cuentas**: No necesitas registrarte en ningún servicio.
 - **Sin coste**: Modelos open-source, gratis para siempre.
-- **Tres modos**: Inferencia local (transformers.js v4), LM Studio/Ollama, o Agent Cloud con tu propio servidor.
+- **Cuatro modos**: Inferencia local (transformers.js v4), LM Studio/Ollama, Agent Cloud con tu propio servidor, y herramientas externas vía MCP.
+- **Extensible**: Conecta cualquier servidor MCP (memoria persistente, filesystem, GitHub, bases de datos…) con un solo setting.
 
 ---
 
@@ -48,41 +49,80 @@ La mayoría de extensiones de IA para VS Code requieren una API key de pago o en
 - Streaming en tiempo real con respuestas en markdown
 - Bloques de código con syntax highlighting
 - Botones de **copiar**, **insertar en editor** y **aplicar diff** en cada bloque
-- Historial de conversación con export a markdown
+- **Persistencia multi-conversación**: historial guardado entre sesiones, hasta 50 conversaciones en paralelo
+- Sidebar con listado, renombrar inline, exportar a Markdown
 - Control de temperatura para ajustar creatividad
+- Interfaz en **Español e Inglés** (cambia sin reiniciar VS Code)
 
 ### Inferencia local (modo Local)
 
 - Corre modelos ONNX directamente en VS Code usando [transformers.js v4](https://github.com/huggingface/transformers.js)
 - No necesitas instalar nada externo — las dependencias se descargan automáticamente la primera vez
+- **Carpeta de modelos configurable**: apunta a un disco externo, tarjeta SD o cualquier ruta con `apliarteAi.modelsDir`
+- **HF Hub browser**: busca y descarga cualquier modelo ONNX de HuggingFace directo desde VS Code
 - Catálogo de modelos preconfigurados y verificados:
 
 | Modelo | Tamaño | Uso recomendado |
 |--------|--------|-----------------|
-| Qwen 2.5 0.5B | ~350 MB | Ultra-rápido, respuestas instantáneas |
+| Qwen 2.5 Coder 3B | ~2 GB | Mejor calidad para código |
 | Qwen 2.5 1.5B | ~1 GB | Buen balance velocidad/calidad |
-| Qwen 2.5 3B | ~2 GB | Mejor calidad de respuestas |
+| Qwen 2.5 0.5B | ~350 MB | Ultra-rápido, respuestas instantáneas |
 | SmolLM2 360M | ~250 MB | Mínimo consumo de recursos |
 
 - Barra de progreso durante la descarga del modelo
-- Los modelos se cachean localmente después de la primera descarga
 
 ### Conexión con LM Studio / Ollama (modo Remoto)
 
 - Detección automática de LM Studio y Ollama
 - Selector de modelo entre los cargados en tu servidor local
 - Indicador de conexión con reintento automático
-- Compatible con cualquier modelo que soporte la API de OpenAI
+- **Tool-calling real**: las herramientas MCP están disponibles para el LLM cuando el modelo lo soporta
 
 ### Modo Agent (tu propio servidor)
 
 - Conecta la extensión a un backend propio desplegado en un VPS
 - El modelo de IA corre en la nube (OpenAI, Anthropic, Google, Groq…) — tú eliges cuál
-- **Herramientas de código**: el agente puede leer archivos, escribir código, buscar en tu proyecto y ejecutar comandos — todo con tu aprobación
-- **RAG automático**: indexa tu workspace y el agente busca contexto relevante antes de responder
+- **Herramientas de código**: leer archivos, escribir código, buscar en tu proyecto y ejecutar comandos — todo con tu aprobación
+- **RAG automático**: indexa tu workspace al abrir y actualiza el índice al guardar (background, sin interrumpir)
 - Las herramientas se ejecutan **localmente en tu máquina** — el servidor solo coordina con el modelo de IA
 - Confirmación obligatoria antes de escribir archivos o ejecutar comandos en terminal
-- Guía completa de deployment en [server/README.md](server/README.md)
+
+### MCP Client — Herramientas externas
+
+Conecta cualquier servidor MCP y sus herramientas quedan disponibles para el LLM automáticamente:
+
+```jsonc
+// settings.json
+"apliarteAi.mcpServers": {
+  "memory": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-memory"]
+  },
+  "filesystem": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/ruta/a/tu/proyecto"]
+  }
+}
+```
+
+- **Transporte stdio**: servidores locales (spawn de procesos)
+- **Transporte HTTP**: servidores MCP remotos (MCP Streamable HTTP)
+- Badges de estado en tiempo real en la toolbar
+- Panel colapsable con todas las tools disponibles por servidor
+- Quick-setup con un click para servidores populares (memory, filesystem)
+- **MCP Resources**: adjunta recursos de servidores MCP como contexto
+- **MCP Prompts**: acciones rápidas predefinidas desde servidores MCP
+
+### Bloques de tool calls
+
+Cada vez que el LLM llama a una herramienta, aparece un bloque visual colapsable con:
+- Nombre de la herramienta y servidor
+- Preview de los argumentos
+- Resultado devuelto
+
+Separado del texto del LLM para no mezclar razonamiento con ejecución.
 
 ### Explorador de workspace
 
@@ -134,9 +174,10 @@ code --install-extension apliarte.apliarte-ai
 
 1. Abre el panel de **ApliArte AI** en la barra lateral
 2. Selecciona **"Local (sin instalar nada)"** en el selector de proveedor
-3. La primera vez, se instalan las dependencias (~1 GB, automático)
-4. Elige un modelo del catálogo y espera a que se descargue
-5. Empieza a chatear
+3. Elige la carpeta donde guardar los modelos (o usa la carpeta interna de la extensión)
+4. La primera vez, se instalan las dependencias (~1 GB, automático)
+5. Elige un modelo del catálogo o busca uno en HF Hub, y espera a que se descargue
+6. Empieza a chatear
 
 ### Modo Remoto (LM Studio / Ollama)
 
@@ -173,11 +214,13 @@ Abre la paleta (`Cmd + Shift + P`) y escribe **"ApliArte AI"** para ver todos lo
 | Setting | Descripción | Default |
 |---------|-------------|---------|
 | `apliarteAi.preset` | Preset de configuración (minimal, ecosystem-only, full-gentleman) | `minimal` |
+| `apliarteAi.modelsDir` | Carpeta para todos los modelos locales. Vacío = carpeta interna de la extensión | _(vacío)_ |
 | `apliarteAi.lmstudioEndpoint` | URL del servidor LM Studio | `http://localhost:1234/v1` |
 | `apliarteAi.ollamaEndpoint` | URL del servidor Ollama | `http://localhost:11434` |
 | `apliarteAi.language` | Idioma del agente (es / en) | `es` |
 | `apliarteAi.agentEndpoint` | URL del backend Agent (modo Agent) | _(vacío)_ |
 | `apliarteAi.agentApiKey` | API key para autenticar con el backend Agent | _(vacío)_ |
+| `apliarteAi.mcpServers` | Servidores MCP conectados (ver sección MCP) | `{}` |
 
 ---
 
@@ -186,39 +229,44 @@ Abre la paleta (`Cmd + Shift + P`) y escribe **"ApliArte AI"** para ver todos lo
 ```
 apliarte-ai/
 ├── src/
-│   ├── extension.ts          # Entry point, registra comandos y providers
+│   ├── extension.ts              # Entry point, comandos, providers, RAG auto-index
 │   ├── core/
-│   │   ├── llmService.ts     # Cliente OpenAI-compatible (LM Studio/Ollama)
-│   │   ├── agentService.ts   # Cliente del backend Agent (SSE streaming)
-│   │   ├── localInference.ts # Inferencia local con transformers.js v4
-│   │   ├── detector.ts       # Detección de LM Studio/Ollama en el sistema
-│   │   ├── setup.ts          # Wizard de configuración inicial
-│   │   ├── preset.ts         # System prompts preconfigurados
-│   │   └── modelRecommender.ts # Recomendador de modelos según hardware
+│   │   ├── llmService.ts         # Cliente OpenAI-compatible con tool-calling (Remote)
+│   │   ├── agentService.ts       # Cliente del backend Agent (SSE streaming)
+│   │   ├── localInference.ts     # Inferencia local con transformers.js v4
+│   │   ├── conversationStore.ts  # Persistencia multi-conversación (globalState)
+│   │   ├── detector.ts           # Detección de LM Studio/Ollama
+│   │   ├── preset.ts             # System prompts preconfigurados
+│   │   └── modelRecommender.ts   # Recomendador de modelos según hardware
+│   ├── mcp/
+│   │   ├── serverManager.ts      # Gestor de ciclo de vida multi-server MCP
+│   │   ├── toolRegistry.ts       # Registry unificado builtin + MCP tools
+│   │   ├── transport-stdio.ts    # Transporte MCP stdio (spawn local)
+│   │   ├── transport-http.ts     # Transporte MCP HTTP Streamable
+│   │   ├── resourceRegistry.ts   # MCP Resources + Prompts
+│   │   ├── jsonrpc.ts            # Cliente JSON-RPC 2.0
+│   │   └── types.ts              # Tipos compartidos MCP
 │   ├── tools/
-│   │   └── executor.ts       # Ejecutor local de herramientas (read/write/search/terminal)
+│   │   └── executor.ts           # Ejecutor local (read/write/search/terminal)
 │   ├── ui/
-│   │   ├── chatView.ts       # Webview del chat principal
-│   │   ├── workspaceView.ts  # Explorador de workspace
-│   │   └── quickActions.ts   # Acciones rápidas sobre código
+│   │   ├── chatView.ts           # Webview: chat, sidebar, settings, HF browser
+│   │   ├── workspaceView.ts      # Explorador de workspace
+│   │   └── quickActions.ts       # Acciones rápidas sobre código
 │   └── utils/
-│       └── logger.ts         # Sistema de logs
-├── server/                   # Backend para modo Agent (Docker)
-│   ├── main.py               # API FastAPI (chat proxy, RAG, auth)
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── requirements.txt
-├── dist/                     # Bundle compilado (esbuild)
-├── package.json              # Manifiesto de la extensión
-└── esbuild.js                # Configuración de build
+│       └── logger.ts
+├── server/                       # Backend para modo Agent (Docker + FastAPI)
+├── dist/                         # Bundle compilado (esbuild)
+├── package.json
+└── esbuild.js
 ```
 
 ### Stack técnico
 
-- **TypeScript** + **esbuild** (bundle de ~80 KB)
-- **transformers.js v4** para inferencia local (instalado on-demand, no en el bundle)
-- **API OpenAI-compatible** para LM Studio/Ollama
-- **FastAPI** + **Ollama embeddings** para el backend Agent
+- **TypeScript** + **esbuild** (bundle de ~150 KB)
+- **transformers.js v4** para inferencia local (instalado on-demand)
+- **MCP JSON-RPC 2.0** cliente propio (stdio + HTTP Streamable HTTP)
+- **API OpenAI-compatible** con tool-calling para LM Studio/Ollama
+- **FastAPI** + embeddings para el backend Agent
 - **VS Code Webview API** para la interfaz del chat
 
 ---
@@ -242,10 +290,11 @@ ApliArte AI respeta tu privacidad por diseño:
 - [x] v0.3 — Workspace explorer, acciones rápidas, diff/apply, recomendador de modelos
 - [x] v0.4 — Inferencia local con transformers.js v4
 - [x] v0.5 — Modo Agent con backend propio (tool-calling, RAG, deploy en VPS)
-- [ ] **v0.6 — Soporte MCP Client** (Model Context Protocol) ⬅️ en desarrollo
-- [ ] v0.7 — Mejoras de UX, persistencia de conversaciones, multi-idioma
-- [ ] v0.8 — Quick-setup para servidores MCP populares (engram, GitHub, PostgreSQL…)
-- [ ] v1.0 — Release estable
+- [x] v0.6 — Persistencia multi-conversación, settings inline, Engram MCP
+- [x] v0.7 — MCP Client genérico (stdio + HTTP), tool-calling Remote, ToolRegistry unificado
+- [x] **v0.8 — HF Hub browser, gestión de carpeta de modelos, MCP Resources/Prompts, i18n EN/ES, RAG auto-index**
+- [x] **v0.9 — Monitor t/s, ripgrep en Agent, alternativas de código, scan mejorado de modelos**
+- [ ] v1.0 — GGUF nativo, Jan como proveedor, templates MCP por stack, release estable
 
 > 📋 Roadmap técnico detallado: [ROADMAP.md](ROADMAP.md)
 

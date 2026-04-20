@@ -1,6 +1,8 @@
 # Roadmap — ApliArte AI
 
-Estado actual: **v0.5.0** (publicada)
+Estado actual: **v0.8.0** lista para publicar · **v0.9** siguiente
+
+> **¿Primera vez?** Leé la [Guía de usuario](GUIDE.md) — explica instalación, modos, MCP y todo lo demás en lenguaje simple.
 
 ---
 
@@ -31,7 +33,7 @@ ApliArte AI empezó como un chat de IA local y privado para VS Code. La visión 
 - [x] Catálogo de modelos preconfigurados (Qwen 2.5, SmolLM2)
 - [x] Descarga automática con barra de progreso
 
-### v0.5 — Modo Agent (actual)
+### v0.5 — Modo Agent
 - [x] Backend FastAPI con deploy en VPS
 - [x] Tool-calling: readFile, writeFile, listFiles, searchCode, runTerminal
 - [x] RAG con embeddings (Ollama + nomic-embed-text)
@@ -39,116 +41,117 @@ ApliArte AI empezó como un chat de IA local y privado para VS Code. La visión 
 - [x] Ejecución local de herramientas con confirmación del usuario
 - [x] Guía de deployment paso a paso
 
+### v0.6 — Persistencia, Engram y UX
+
+> **Nota**: El scope original de v0.6 era un **cliente MCP genérico**. Se re-priorizó para resolver antes dos dolores reales: pérdida de historial al cerrar VS Code y falta de memoria cross-session. El cliente MCP genérico se movió a v0.7.
+
+- [x] Persistencia multi-conversación con nombres automáticos, timestamps y preview (hasta 50 en paralelo)
+- [x] Sidebar de conversaciones: crear, cargar, renombrar inline, eliminar, exportar
+- [x] Exportar todas las conversaciones a Markdown
+- [x] Panel de configuración inline (modal dentro del chat)
+- [x] Engram MCP integrado vía HTTP (`apliarteAi.engramEndpoint`) — servidor único hardcoded
+- [x] Badge de estado de Engram en la UI
+- [x] Welcome screen contextual según proveedor (Local / Remote / Agent)
+- [x] Botón "Descargar modelo recomendado" visible desde el arranque en modo Local
+- [x] Migración automática del historial plano anterior (v0.5.x)
+- [x] Fix barra de progreso de descarga (v0.6.3)
+- [x] Fix `import()` de directorio en transformers.js (v0.6.4)
+- [x] Catálogo actualizado: Qwen2.5-Coder-3B-Instruct en vez del gated Qwen2.5-3B-Instruct (v0.6.5)
+
+**Archivos clave**:
+- `src/core/conversationStore.ts` — persistencia multi-conversación
+- `src/ui/chatView.ts` — sidebar, settings inline, welcome screen
+
+### v0.7 — MCP Client genérico
+
+> Transforma ApliArte AI de "chat con herramientas fijas + Engram hardcoded" a "hub extensible de herramientas de IA". Cualquier servidor MCP (engram, filesystem, GitHub…) se conecta via `apliarteAi.mcpServers` y sus herramientas quedan disponibles para el LLM automáticamente.
+
+- [x] **Fase 1 — Transporte y ciclo de vida**: cliente JSON-RPC 2.0, transporte stdio (spawn + SIGTERM/SIGKILL) y HTTP (MCP Streamable HTTP, session ID), gestor multi-server con `sync`/`restart`/`onDidChange`
+- [x] **Fase 2 — Descubrimiento dinámico**: `tools/list` por servidor, namespace `{server}.{toolName}`, `ToolRegistry` unificado (builtin + MCP con discriminated union), `executor.ts` delega al registry
+- [x] **Fase 3 — Integración LLM**: tool-calling en modo Agent (ya existía), Remote (`streamChatWithTools` con loop hasta 10 iter, protocolo OpenAI), nota inline en Local (modelos pequeños no soportan tool-calling), timeout per-tool 30s
+- [x] **Fase 4 — Configuración y UI**: setting `apliarteAi.mcpServers` con JSON Schema, migración automática `engramEndpoint` → `mcpServers.engram`, comandos `restartMcpServer` y `showMcpStatus`, badges de estado en toolbar, panel colapsable de tools por server
+- [x] **Fase 5 — Engram sobre MCP**: eliminado `engramService.ts` y panel UI de Engram — interacción 100% vía MCP tool-calling del LLM. Estado visible en `#mcp-badges`
+
+**Archivos nuevos**: `src/mcp/jsonrpc.ts`, `src/mcp/transport-stdio.ts`, `src/mcp/transport-http.ts`, `src/mcp/serverManager.ts`, `src/mcp/toolRegistry.ts`, `src/mcp/types.ts`  
+**Archivos modificados**: `src/ui/chatView.ts`, `src/core/llmService.ts`, `src/tools/executor.ts`, `src/extension.ts`, `package.json`  
+**Archivos eliminados**: `src/core/engramService.ts`
+
+### v0.8 — UX, gestión de modelos y RAG ✅
+
+- [x] **Gestión de modelos locales — flujo completo de carpeta + descargas**
+  - Prompt al instalar/actualizar: detecta primera ejecución y upgrades, muestra picker de carpeta
+  - Setting `apliarteAi.modelsDir` — ruta única para todos los modelos (disco externo, SD card, etc.)
+  - Folder picker con `vscode.window.showOpenDialog`
+  - Scan automático: detecta HF cache layout + repos planos (config.json + safetensors/onnx)
+  - Descarga dirigida: todas las descargas respetan `modelsDir`
+  - Badge en welcome screen y settings mostrando la carpeta activa
+- [x] **HF Hub browser**: buscar modelos ONNX en HuggingFace, filtrado por descargas, descarga directa a `modelsDir`
+- [x] **UI de tool calls mejorada**: colapsable con preview de argumentos y resultado, separado del texto del LLM
+- [x] **Resources y Prompts MCP** (Fase 6):
+  - `resources/list` + `resources/read` — adjuntar recursos como contexto
+  - `prompts/list` + `prompts/get` — prompts predefinidos como acciones rápidas
+- [x] Multi-idioma EN/ES real: `applyLang()` con mapa de 35 keys, activación instantánea sin reiniciar
+- [x] Auto-indexar workspace al abrir (RAG en modo Agent, silent background)
+- [x] Actualización incremental del índice RAG al guardar (debounced 3s, solo archivos texto)
+- [x] Botones de soporte integrados en Settings: PayPal, Ko-fi, Twitch Tip
+
+**Archivos modificados**: `src/ui/chatView.ts`, `src/core/localInference.ts`, `src/mcp/resourceRegistry.ts`, `src/extension.ts`, `package.json`
+
 ---
 
 ## Próximas versiones
 
-### v0.6 — Soporte MCP Client ⬅️ SIGUIENTE
+### v0.9 — Rendimiento local, contexto quirúrgico y UX avanzada
 
-> **Objetivo**: Que cualquier usuario pueda conectar servidores MCP (engram, filesystem, GitHub, bases de datos…) y que sus herramientas estén disponibles para el LLM automáticamente.
+#### Feature 1 — Monitor de rendimiento de inferencia local
 
-Este es el cambio más grande desde v0.1. Transforma ApliArte AI de "chat con herramientas fijas" a "hub extensible de herramientas de IA".
+Problema: el usuario no sabe por qué la generación es lenta. No sabe si el modelo es demasiado grande para su hardware, si WebGPU está activo, ni qué hacer para mejorar la experiencia.
 
-#### Fase 1 — Transporte MCP y ciclo de vida
+- [x] **Indicador de tokens/segundo** en el toolbar del chat (badge pequeño, aparece al terminar cada respuesta)
+  - `localInference.ts`: mide tiempo desde primer token hasta último, cuenta invocaciones del `TextStreamer` callback, calcula `t/s`
+  - `StreamOptions.onStats` callback — tipado en `llmService.ts` como `InferenceStats`
+  - `ChatProvider`: al recibir stats, actualiza status bar de VS Code (`$(zap) 12.3 t/s`) y postea `inferenceStats` al webview
+- [x] **Sugerencia de cambio de modelo** cuando `t/s < 8` (umbral empírico de "experiencia fluida")
+  - Banner no invasivo sobre la barra de input: `"Generación lenta (3.2 t/s). ¿Cambiar a Qwen 0.5B para respuestas instantáneas?"` + botón `Cambiar` + botón `✕`
+  - El botón aplica el cambio directo sin abrir settings — llama al mismo handler que el `model-select`
+  - No se muestra de nuevo por 10 minutos si el usuario lo descarta (localStorage)
+- [x] Badge colorea: verde ≥ 8 t/s, naranja 4–8 t/s, rojo < 4 t/s
+- [x] Status bar de VS Code muestra `$(zap) 12.3 t/s` durante 8 segundos post-respuesta
 
-Implementar el protocolo base para comunicarse con servidores MCP.
+**Archivos**: `src/core/llmService.ts`, `src/core/localInference.ts`, `src/ui/chatView.ts`
 
-- [ ] Cliente JSON-RPC 2.0 (`src/mcp/jsonrpc.ts`)
-  - Envío/recepción de mensajes con IDs correlativos
-  - Manejo de errores JSON-RPC (-32600, -32601, etc.)
-  - Timeout configurable por request
-- [ ] Transporte stdio (`src/mcp/transport-stdio.ts`)
-  - Spawn de proceso hijo con `child_process.spawn`
-  - Comunicación por stdin/stdout en formato JSON-RPC
-  - Manejo de stderr para logs/debug
-- [ ] Transporte SSE (`src/mcp/transport-sse.ts`)
-  - Conexión a servidor HTTP remoto
-  - Envío por POST, recepción por EventSource/fetch streaming
-- [ ] Gestor de servidores (`src/mcp/serverManager.ts`)
-  - Start/stop/restart de cada servidor MCP configurado
-  - Health monitoring (reconexión automática)
-  - Shutdown limpio al desactivar la extensión
+#### Feature 2 — Zero-Pollution Retrieval (contexto determinista con ripgrep)
 
-**Archivos nuevos**: `src/mcp/jsonrpc.ts`, `src/mcp/transport-stdio.ts`, `src/mcp/transport-sse.ts`, `src/mcp/serverManager.ts`, `src/mcp/types.ts`
+Problema: el RAG vectorial inyecta ruido al contexto — resultados vagamente similares semánticamente pero irrelevantes lógicamente. Los modelos pequeños se confunden con ese ruido.
 
-#### Fase 2 — Descubrimiento de herramientas y registro dinámico
+- [x] **Integrar `ripgrep` como motor de búsqueda en modo Agent** — `searchCode` usa `rg` si disponible, fallback a `findFiles`
+  - Respeta `.gitignore` nativamente — nunca indexa `node_modules`, `dist`, etc.
+  - `ENOENT` → fallback silencioso, sin romper nada si `rg` no está instalado
+- [ ] **Extracción de firmas** (solo funciones/clases/interfaces, no el cuerpo completo) para el contexto estructural
+  - Patterns por lenguaje: TypeScript/JS, Python, Go, Rust
+  - Objetivo: contexto `< 20%` del tamaño de RAG vectorial típico
+- [ ] `indexWorkspace` refactorizado: usa `rg --files-with-matches` para listar archivos relevantes
 
-Reemplazar el switch hardcodeado de 5 herramientas por un registro dinámico.
+**Archivos**: `src/tools/executor.ts`, `src/core/agentService.ts`, `src/extension.ts`
 
-- [ ] Llamada a `tools/list` en cada servidor conectado
-  - Parseo de `inputSchema` (JSON Schema)
-  - Merge de herramientas de múltiples servidores
-  - Detección de colisiones de nombres
-- [ ] Registro unificado de herramientas (`src/mcp/toolRegistry.ts`)
-  - Herramientas built-in (las 5 actuales de `executor.ts`)
-  - Herramientas MCP descubiertas dinámicamente
-  - Cada herramienta sabe a qué servidor pertenece
-- [ ] Adaptar `executor.ts` para que consulte el registro
-  - Built-in tool → ejecución directa (flujo actual)
-  - MCP tool → `tools/call` vía JSON-RPC al servidor correspondiente
+#### Feature 3 — "Multiverso": alternativas ramificadas de código
 
-**Archivos nuevos**: `src/mcp/toolRegistry.ts`
-**Archivos modificados**: `src/tools/executor.ts`
+Problema: el ciclo real de trabajo con IA es no lineal. Si la primera respuesta no es óptima, el usuario tiene que hacer scroll por un historial largo para comparar variantes.
 
-#### Fase 3 — Integración con el LLM
+- [x] **Botón "⟳ Alt"** en cada bloque de código del chat
+  - Envía `requestAlternative` con el código original; extensión llama al LLM con micro-prompt focalizado
+  - La variante aparece como pestaña `❷` dentro del mismo bloque — no contamina el historial
+- [x] **UI de pestañas** `❶ ❷ ❸` — copy/insert/apply siempre usan el tab activo
+- [x] Máximo 3 alternativas por bloque
+- [x] En modo Local: botón deshabilitado (modelos pequeños no manejan bien la variación)
 
-Conectar las herramientas descubiertas con el flujo de chat existente.
+**Archivos**: `src/ui/chatView.ts`
 
-- [ ] Inyectar herramientas MCP en la definición de tools del LLM
-  - Modo Agent: enviar tools[] combinadas al backend
-  - Modo Remote: enviar tools[] directo al LLM (si soporta function calling)
-  - Modo Local: inyectar descripciones en el system prompt (modelos pequeños no soportan tool-calling nativo)
-- [ ] Adaptar el tool-calling loop de `chatView.ts`
-  - Routing: si el LLM llama una herramienta MCP → JSON-RPC `tools/call`
-  - Si llama una built-in → executor.ts (sin cambios)
-  - Preservar confirmaciones de seguridad para herramientas destructivas
-- [ ] Timeout y cancelación por herramienta
+#### Otros items de v0.9
 
-**Archivos modificados**: `src/ui/chatView.ts`, `src/core/agentService.ts`
-
-#### Fase 4 — Configuración y UI
-
-- [ ] Setting `apliarteAi.mcpServers` en `package.json`
-  ```jsonc
-  "apliarteAi.mcpServers": {
-    "engram": {
-      "command": "engram",
-      "args": ["mcp"],
-      "env": { "ENGRAM_PROJECT": "${workspaceFolderBasename}" }
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${workspaceFolder}"]
-    }
-  }
-  ```
-- [ ] Indicador de estado por servidor en la UI del chat
-  - 🟢 conectado / 🔴 error / 🟡 iniciando
-- [ ] Comando `apliarteAi.restartMcpServer` para reiniciar un servidor
-- [ ] Mostrar herramientas MCP disponibles en el chat (colapsable)
-
-**Archivos modificados**: `package.json`, `src/ui/chatView.ts`, `src/extension.ts`
-
-#### Fase 5 — Resources y Prompts MCP (opcional en v0.6)
-
-- [ ] Soporte para `resources/list` + `resources/read`
-  - Adjuntar recursos MCP como contexto al chat (igual que los archivos del workspace)
-- [ ] Soporte para `prompts/list` + `prompts/get`
-  - Prompts predefinidos de servidores MCP como acciones rápidas adicionales
-
----
-
-### v0.7 — Mejoras de UX y persistencia
-
-- [ ] UI mejorada para tool calls (colapsable, con preview)
-- [ ] Persistencia de conversaciones (guardar/restaurar historial)
-- [ ] Multi-idioma (EN/ES)
-- [ ] Auto-indexar workspace al abrir (RAG en modo Agent)
-
-### v0.8 — Integraciones populares
-
+- [ ] **Jan como proveedor Remote** (`http://localhost:1337/v1` — API OpenAI-compatible)
+- [ ] **GGUF nativo**: integrar `node-llama-cpp` (binarios por plataforma) para inferencia sin LM Studio/Ollama
 - [ ] Quick-setup para servidores MCP populares:
-  - engram (memoria persistente)
   - GitHub (issues, PRs, repos)
   - PostgreSQL / SQLite
   - Browser / Playwright
@@ -157,51 +160,47 @@ Conectar las herramientas descubiertas con el flujo de chat existente.
 ### v1.0 — Release estable
 
 - [ ] Documentación completa del MCP Client
-- [ ] Tests automatizados
+- [ ] Tests automatizados del cliente JSON-RPC y del `toolRegistry`
 - [ ] Marketplace con screenshots actualizados
 - [ ] Breaking changes resueltos, API estable
 
 ---
 
-## Arquitectura actual vs. MCP
-
-### Hoy (v0.5)
+## Arquitectura actual (v0.8)
 
 ```
-Usuario → Chat UI → chatView.ts → agentService.ts → Backend (VPS)
-                                                       ↓
-                                                    LLM (via AI Gateway)
-                                                       ↓
-                                                    tool_call event
-                                                       ↓
-                        chatView.ts ← SSE ← Backend
-                            ↓
-                        executor.ts (5 herramientas fijas)
-                            ↓
-                        tool result → Backend → LLM continúa
+Modo Remote / Local
+─────────────────────────────────────────────────────────────
+Usuario → Chat UI → chatView.ts → llmService.streamChatWithTools()
+                                       ↓ (OpenAI tool_calls)
+                               tool_call event acumulado
+                                       ↓
+                               toolRegistry.execute()
+                                   ├── built-in? → executor.ts
+                                   └── MCP tool? → serverManager.ts
+                                                     ↓ JSON-RPC
+                                                  engram / filesystem / ...
+                                       ↓
+                               tool result → LLM continúa (loop ≤10)
+
+Modo Agent
+─────────────────────────────────────────────────────────────
+Usuario → Chat UI → chatView.ts → agentService.streamAgentChat()
+                                       ↓ SSE
+                               Backend VPS (LLM via AI Gateway)
+                                       ↓ tool_call event
+                               chatView.ts ← SSE ← Backend
+                                       ↓
+                               toolRegistry.execute()  (mismo registry)
+                                   ├── built-in? → executor.ts
+                                   └── MCP tool? → serverManager.ts
+                                                     ↓ JSON-RPC
+                                                  engram / filesystem / ...
+                                       ↓
+                               tool result → Backend → LLM continúa
 ```
 
-### Con MCP (v0.6)
-
-```
-Usuario → Chat UI → chatView.ts → agentService.ts → Backend (VPS)
-                                                       ↓
-                                                    LLM (via AI Gateway)
-                                                       ↓
-                                                    tool_call event
-                                                       ↓
-                        chatView.ts ← SSE ← Backend
-                            ↓
-                        toolRegistry.ts
-                            ├── built-in? → executor.ts
-                            └── MCP tool? → serverManager.ts
-                                              ↓ JSON-RPC
-                                           engram / filesystem / github / ...
-                            ↓
-                        tool result → Backend → LLM continúa
-```
-
-La extensión maneja **todos** los servidores MCP localmente. El backend nunca habla con los MCP servers — eso mantiene la seguridad (herramientas corren donde está tu código).
+Los MCP servers siempre corren en la máquina del usuario. El backend (si se usa) nunca habla con ellos directamente — eso mantiene la seguridad.
 
 ---
 
@@ -209,5 +208,6 @@ La extensión maneja **todos** los servidores MCP localmente. El backend nunca h
 
 1. **Seguridad primero**: Las herramientas destructivas siempre piden confirmación, vengan de donde vengan.
 2. **Progressive disclosure**: MCP es opt-in. Sin configurar nada, todo funciona como antes.
-3. **Ejecución local**: Los MCP servers corren en la máquina del usuario. El backend (si se usa) solo coordina con el LLM.
+3. **Ejecución local**: Los MCP servers corren en la máquina del usuario. El backend solo coordina con el LLM.
 4. **Agnóstico al modelo**: Funciona con modelos locales (transformers.js), remotos (LM Studio/Ollama), y cloud (via Agent backend).
+5. **Backwards compat**: Cada cambio mantiene la config existente funcionando al menos un par de versiones antes de deprecar.

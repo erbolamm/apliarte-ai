@@ -12,6 +12,13 @@ export interface ToolCall {
   arguments: Record<string, unknown>;
 }
 
+/** Tool descriptor forwarded to the backend, which relays it to the LLM. */
+export interface AgentToolDescriptor {
+  name: string;
+  description?: string;
+  inputSchema: unknown;
+}
+
 export interface AgentEvent {
   type: 'chunk' | 'tool_call' | 'done' | 'error';
   text?: string;
@@ -22,7 +29,11 @@ export async function* streamAgentChat(
   endpoint: string,
   apiKey: string,
   messages: ChatMessage[],
-  options?: StreamOptions & { workspaceId?: string; toolsEnabled?: boolean }
+  options?: StreamOptions & {
+    workspaceId?: string;
+    toolsEnabled?: boolean;
+    tools?: AgentToolDescriptor[];
+  }
 ): AsyncGenerator<AgentEvent> {
   const url = `${endpoint}/v1/chat`;
   const controller = new AbortController();
@@ -31,13 +42,16 @@ export async function* streamAgentChat(
     options.signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
 
-  const body = {
+  const body: Record<string, unknown> = {
     messages,
     workspace_id: options?.workspaceId ?? null,
     tools_enabled: options?.toolsEnabled ?? true,
     model: options?.model ?? null,
     temperature: options?.temperature ?? 0.7,
   };
+  if (options?.tools && options.tools.length > 0) {
+    body.tools = options.tools;
+  }
 
   logger.info(`Agent request → ${url} (${messages.length} msgs)`);
 
@@ -140,7 +154,7 @@ export async function* continueAfterToolCall(
   endpoint: string,
   apiKey: string,
   messages: ChatMessage[],
-  options?: StreamOptions & { workspaceId?: string }
+  options?: StreamOptions & { workspaceId?: string; tools?: AgentToolDescriptor[] }
 ): AsyncGenerator<AgentEvent> {
   const url = `${endpoint}/v1/tool-result`;
   const controller = new AbortController();
@@ -149,12 +163,15 @@ export async function* continueAfterToolCall(
     options.signal.addEventListener('abort', () => controller.abort(), { once: true });
   }
 
-  const body = {
+  const body: Record<string, unknown> = {
     messages,
     workspace_id: options?.workspaceId ?? null,
     model: options?.model ?? null,
     temperature: options?.temperature ?? 0.7,
   };
+  if (options?.tools && options.tools.length > 0) {
+    body.tools = options.tools;
+  }
 
   let response: Response;
   try {

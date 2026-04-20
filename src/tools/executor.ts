@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { logger } from '../utils/logger';
+import { getToolRegistry } from '../mcp/toolRegistry';
 import type { ToolCall } from '../core/agentService';
 
 /**
  * Tool executor — runs tools LOCALLY in the user's VS Code.
- * The agent backend requests tools, the extension executes them.
+ *
+ * Routing is delegated to the shared ToolRegistry:
+ *   - built-in tools → handlers registered below
+ *   - MCP tools      → tools/call via JSON-RPC (when a server manager is wired)
+ *
  * Files never leave the user's machine without explicit action.
  */
 
@@ -14,6 +19,70 @@ export interface ToolResult {
   role: 'tool';
   content: string;
 }
+
+// ---------------------------------------------------------------------------
+// Built-in tool definitions (shared schemas and handlers)
+// ---------------------------------------------------------------------------
+
+const builtinSpecs = {
+  readFile: {
+    description: 'Read a text file from the workspace.',
+    inputSchema: {
+      type: 'object',
+      properties: { path: { type: 'string', description: 'Path relative to workspace root' } },
+      required: ['path'],
+    },
+  },
+  writeFile: {
+    description: 'Write content to a file in the workspace. Asks the user for confirmation.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path relative to workspace root' },
+        content: { type: 'string', description: 'File contents' },
+      },
+      required: ['path', 'content'],
+    },
+  },
+  listFiles: {
+    description: 'List files in a workspace directory.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Relative directory. Empty = workspace root.' },
+        recursive: { type: 'boolean', description: 'Recurse into subdirectories' },
+      },
+    },
+  },
+  searchCode: {
+    description: 'Search for a literal string across workspace files.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Literal text to search for' },
+        path: { type: 'string', description: 'Optional subdirectory to limit the search' },
+      },
+      required: ['query'],
+    },
+  },
+  runTerminal: {
+    description: 'Run a shell command in the workspace. Asks the user for confirmation.',
+    inputSchema: {
+      type: 'object',
+      properties: { command: { type: 'string', description: 'Shell command to execute' } },
+      required: ['command'],
+    },
+  },
+} as const;
+
+// Register built-ins with the shared registry on module load. Idempotent enough
+// — re-registering overwrites with a warning, which is fine for hot reload.
+const _registry = getToolRegistry();
+_registry.registerBuiltin('readFile', builtinSpecs.readFile, (args) => readFile(args.path as string));
+_registry.registerBuiltin('writeFile', builtinSpecs.writeFile, (args) => writeFile(args.path as string, args.content as string));
+_registry.registerBuiltin('listFiles', builtinSpecs.listFiles, (args) => listFiles(args.path as string, args.recursive as boolean));
+_registry.registerBuiltin('searchCode', builtinSpecs.searchCode, (args) => searchCode(args.query as string, args.path as string | undefined));
+_registry.registerBuiltin('runTerminal', builtinSpecs.runTerminal, (args) => runTerminal(args.command as string));
 
 /**
  * Execute a tool call and return the result.
@@ -25,37 +94,8 @@ export async function executeTool(toolCall: ToolCall): Promise<ToolResult> {
   logger.info(`Tool call: ${name}(${JSON.stringify(args).slice(0, 100)})`);
 
   try {
-    switch (name) {
-      case 'readFile':
-        return { tool_call_id: id, role: 'tool', content: await readFile(args.path as string) };
-
-      case 'writeFile': {
-        const content = await writeFile(args.path as string, args.content as string);
-        return { tool_call_id: id, role: 'tool', content };
-      }
-
-      case 'listFiles':
-        return {
-          tool_call_id: id,
-          role: 'tool',
-          content: await listFiles(args.path as string, args.recursive as boolean),
-        };
-
-      case 'searchCode':
-        return {
-          tool_call_id: id,
-          role: 'tool',
-          content: await searchCode(args.query as string, args.path as string | undefined),
-        };
-
-      case 'runTerminal': {
-        const output = await runTerminal(args.command as string);
-        return { tool_call_id: id, role: 'tool', content: output };
-      }
-
-      default:
-        return { tool_call_id: id, role: 'tool', content: `Unknown tool: ${name}` };
-    }
+    const content = await _registry.execute(name, args as Record<string, unknown>);
+    return { tool_call_id: id, role: 'tool', content };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.info(`Tool error: ${name} → ${msg}`);
@@ -151,42 +191,79 @@ async function listFiles(dirPath: string, recursive?: boolean): Promise<string> 
 }
 
 async function searchCode(query: string, dirPath?: string): Promise<string> {
-  // Use VS Code's built-in text search
   const root = getWorkspaceRoot();
-  const include = dirPath ? new vscode.RelativePattern(resolveWorkspacePath(dirPath), '**/*') : undefined;
+  const searchDir = dirPath ? path.resolve(root, dirPath) : root;
 
-  const results: string[] = [];
-  const maxResults = 30;
-
-  // textSearchQuery was removed in newer VS Code — use findFiles + readFile fallback
+  // Try ripgrep first — respects .gitignore, no noise from node_modules/dist
   try {
-    // Simple approach: use findFiles and grep through them
-    const pattern = include ?? new vscode.RelativePattern(root, '**/*');
-    const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**', 200);
-
-    for (const file of files) {
-      if (results.length >= maxResults) break;
-      try {
-        const bytes = await vscode.workspace.fs.readFile(file);
-        const content = Buffer.from(bytes).toString('utf-8');
-        const lines = content.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-          if (lines[i].includes(query)) {
-            const rel = path.relative(root, file.fsPath);
-            results.push(`${rel}:${i + 1}: ${lines[i].trim().slice(0, 150)}`);
-            if (results.length >= maxResults) break;
-          }
-        }
-      } catch {
-        // skip binary/unreadable files
-      }
+    return await _searchRg(query, searchDir, root);
+  } catch (rgErr) {
+    const isNotFound = (rgErr as NodeJS.ErrnoException).code === 'ENOENT';
+    if (!isNotFound) {
+      // rg ran but query produced no results (exit 1) — treat as empty
+      return `No results for "${query}"`;
     }
-  } catch (err) {
-    return `Search error: ${err instanceof Error ? err.message : String(err)}`;
+    // rg not installed — fallback to VS Code findFiles
+    logger.info('[searchCode] rg not found, using findFiles fallback');
   }
 
-  if (results.length === 0) return `No results for "${query}"`;
-  return results.join('\n');
+  // Fallback: findFiles + manual scan (no .gitignore awareness)
+  const include = dirPath ? new vscode.RelativePattern(resolveWorkspacePath(dirPath), '**/*') : undefined;
+  const pattern = include ?? new vscode.RelativePattern(root, '**/*');
+  const files = await vscode.workspace.findFiles(pattern, '**/node_modules/**', 200);
+  const results: string[] = [];
+
+  for (const file of files) {
+    if (results.length >= 30) break;
+    try {
+      const bytes = await vscode.workspace.fs.readFile(file);
+      const content = Buffer.from(bytes).toString('utf-8');
+      const lines = content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes(query)) {
+          results.push(`${path.relative(root, file.fsPath)}:${i + 1}: ${lines[i].trim().slice(0, 150)}`);
+          if (results.length >= 30) break;
+        }
+      }
+    } catch { /* skip binary/unreadable */ }
+  }
+
+  return results.length === 0 ? `No results for "${query}"` : results.join('\n');
+}
+
+function _searchRg(query: string, searchDir: string, workspaceRoot: string): Promise<string> {
+  const { execFile } = require('child_process') as typeof import('child_process');
+  return new Promise<string>((resolve, reject) => {
+    execFile(
+      'rg',
+      [
+        '--line-number',
+        '--max-count', '1',        // 1 match per file — context not needed for search
+        '--max-columns', '150',
+        '--max-filesize', '500K',
+        '--smart-case',
+        '--',
+        query,
+        searchDir,
+      ],
+      { cwd: workspaceRoot, maxBuffer: 512 * 1024, timeout: 10_000 },
+      (error, stdout, stderr) => {
+        if (error) {
+          // exit code 1 = no matches (not an error), exit code 2 = real error
+          if (error.code === 1) return resolve(`No results for "${query}"`);
+          return reject(Object.assign(error, { stderr }));
+        }
+        const lines = stdout.trim().split('\n').filter(Boolean).slice(0, 50);
+        const relative = lines.map((l) => {
+          // rg outputs absolute paths when given absolute searchDir
+          return l.startsWith(workspaceRoot)
+            ? l.slice(workspaceRoot.length + 1)
+            : l;
+        });
+        resolve(relative.length === 0 ? `No results for "${query}"` : relative.join('\n'));
+      },
+    );
+  });
 }
 
 async function runTerminal(command: string): Promise<string> {
