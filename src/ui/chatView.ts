@@ -19,6 +19,7 @@ import {
   unloadModel,
   areDepsInstalled,
   installDeps,
+  scanModelsDirTyped,
 } from '../core/localInference';
 import {
   streamAgentChat,
@@ -786,18 +787,23 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       const loaded = getLoadedModel();
       this._currentModel = loaded ?? undefined;
 
-      // Models that are in the scan but NOT in the catalog — already on disk
+      // Typed scan: split ONNX (loadable) vs GGUF (informational — needs LM Studio)
       const catalogIds = new Set(AVAILABLE_MODELS.map((m) => m.id));
-      const scannedExtra = allModels
-        .map((m) => m.id)
-        .filter((id) => !catalogIds.has(id));
+      const scanned = modelsDir ? scanModelsDirTyped(modelsDir) : [];
+      const scannedOnnx = scanned
+        .filter((m) => m.type === 'onnx' && !catalogIds.has(m.id))
+        .map((m) => m.id);
+      const scannedGguf = scanned
+        .filter((m) => m.type === 'gguf')
+        .map((m) => m.id);
 
       this._post({
         type: 'modelsLoaded',
         models: allModels.map((m) => m.id),
         selected: this._currentModel ?? '',
         localCatalog: AVAILABLE_MODELS,
-        scannedModels: scannedExtra,
+        scannedModels: scannedOnnx,
+        ggufModels: scannedGguf,
         loadedModel: loaded,
         needsModelsDir: !modelsDir,
         modelsDir,
@@ -3013,14 +3019,25 @@ window.addEventListener('message', function(event) {
         } else {
           updateWelcomeForProvider('local-needs-download');
         }
-        // ── Models found on disk (not in catalog) — use download: prefix to trigger loadModel ──
+        // ── ONNX models found on disk (loadable locally) ──
         if (d.scannedModels && d.scannedModels.length > 0) {
           var scanSep = document.createElement('option'); scanSep.disabled = true;
-          scanSep.textContent = '── En tu carpeta ──'; mSel.appendChild(scanSep);
+          scanSep.textContent = '── En tu carpeta (ONNX) ──'; mSel.appendChild(scanSep);
           d.scannedModels.forEach(function(id) {
             if (id === d.loadedModel) return;
             var opt = document.createElement('option');
             opt.value = 'download:' + id; opt.textContent = '📂 ' + id.split('/').pop();
+            mSel.appendChild(opt);
+          });
+        }
+        // ── GGUF models found on disk (informational — use via LM Studio) ──
+        if (d.ggufModels && d.ggufModels.length > 0) {
+          var ggufSep = document.createElement('option'); ggufSep.disabled = true;
+          ggufSep.textContent = '── En tu carpeta (GGUF · usa vía LM Studio) ──'; mSel.appendChild(ggufSep);
+          d.ggufModels.forEach(function(id) {
+            var opt = document.createElement('option');
+            opt.value = ''; opt.disabled = true;
+            opt.textContent = '🟠 ' + id.split('/').pop();
             mSel.appendChild(opt);
           });
         }

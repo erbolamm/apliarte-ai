@@ -270,80 +270,105 @@ export async function streamChatLocal(
   }
 }
 
-const MODEL_EXTS = new Set(['.onnx', '.safetensors', '.gguf', '.bin']);
-
-function _hasModelFiles(dir: string): boolean {
-  try {
-    return readdirSync(dir).some((f) => MODEL_EXTS.has(f.slice(f.lastIndexOf('.'))));
-  } catch { return false; }
+export interface ScannedModel {
+  id: string;
+  type: 'onnx' | 'gguf';
+  localPath: string;
 }
 
-/**
- * Scan a directory for locally cached HuggingFace models.
- *
- * Supports three layouts:
- *   1. HF cache:   models--{org}--{name}/snapshots/<hash>/  (verifies snapshots exist)
- *   2. Plain repo: {name}/config.json + model files
- *   3. Org/repo:   {org}/{name}/config.json + model files  (one level deeper)
- */
-export function scanModelsDir(dir: string): string[] {
-  if (!existsSync(dir)) return [];
-  const found: string[] = [];
-  let entries: string[] = [];
-  try {
-    entries = readdirSync(dir);
-  } catch (err) {
-    logger.warn(`[localInference] scanModelsDir failed reading ${dir}: ${(err as Error).message}`);
-    return [];
+// Dirs that are never model dirs — skip to avoid noise and deep traversal
+const _SKIP_DIRS = new Set([
+  'blobs', 'manifests', 'logs', 'extensions', 'backends',
+  'db', 'threads', 'node_modules', 'dist', '.git', 'mlx',
+]);
+
+function _scanRecursive(
+  baseDir: string,
+  currentDir: string,
+  rel: string,
+  depth: number,
+  out: ScannedModel[],
+): void {
+  if (depth > 4) return;
+
+  let entries: string[];
+  try { entries = readdirSync(currentDir); } catch { return; }
+
+  const files: string[] = [];
+  const subdirs: string[] = [];
+  for (const e of entries) {
+    try {
+      if (statSync(join(currentDir, e)).isDirectory()) subdirs.push(e);
+      else files.push(e);
+    } catch { /* skip */ }
   }
 
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    try {
-      const st = statSync(fullPath);
-      if (!st.isDirectory()) continue;
-
-      // ── Layout 1: HF cache (models--ORG--NAME) ──────────────
-      if (entry.startsWith('models--')) {
-        const parts = entry.slice('models--'.length).split('--');
-        if (parts.length >= 2) {
-          // Only include if snapshots directory has content (model actually downloaded)
-          const snapshotsDir = join(fullPath, 'snapshots');
-          if (existsSync(snapshotsDir)) {
-            try {
-              const hashes = readdirSync(snapshotsDir).filter((h) => {
-                try { return statSync(join(snapshotsDir, h)).isDirectory(); } catch { return false; }
-              });
-              if (hashes.length > 0) found.push(parts.join('/'));
-            } catch { found.push(parts.join('/')); } // can't read snapshots, assume it's there
-          }
-        }
-        continue;
-      }
-
-      // ── Layout 2: plain HF repo (dir has config.json + model files) ──
-      const hasConfig = existsSync(join(fullPath, 'config.json'));
-      if (hasConfig && _hasModelFiles(fullPath)) {
-        found.push(entry);
-        continue;
-      }
-
-      // ── Layout 3: org/repo (one level deeper) ────────────────
+  // ── HF cache entry (models--ORG--NAME) ──
+  // Detected by dirname, not by position — works at any depth
+  const dirName = currentDir === baseDir ? '' : currentDir.slice(baseDir.length + 1).split('/').pop()!;
+  if (dirName.startsWith('models--')) {
+    const parts = dirName.slice('models--'.length).split('--');
+    if (parts.length >= 2 && subdirs.includes('snapshots')) {
       try {
-        for (const sub of readdirSync(fullPath)) {
-          const subPath = join(fullPath, sub);
-          try {
-            if (!statSync(subPath).isDirectory()) continue;
-            if (existsSync(join(subPath, 'config.json')) && _hasModelFiles(subPath)) {
-              found.push(`${entry}/${sub}`);
-            }
-          } catch { /* skip */ }
+        const snapDir = join(currentDir, 'snapshots');
+        const hashes = readdirSync(snapDir).filter((h) => {
+          try { return statSync(join(snapDir, h)).isDirectory(); } catch { return false; }
+        });
+        for (const hash of hashes) {
+          const snapFiles = readdirSync(join(snapDir, hash));
+          if (snapFiles.some((f) => f.endsWith('.onnx') || f.endsWith('.safetensors'))) {
+            out.push({ id: parts.join('/'), type: 'onnx', localPath: currentDir });
+            return;
+          }
+          if (snapFiles.some((f) => f.endsWith('.gguf'))) {
+            out.push({ id: parts.join('/'), type: 'gguf', localPath: currentDir });
+            return;
+          }
+          // has snapshots but unknown format — skip (TTS, vision, etc.)
         }
       } catch { /* skip */ }
-    } catch { /* skip unreadable */ }
+    }
+    return; // never recurse inside models-- dirs
   }
 
-  return [...new Set(found)];
+  // ── GGUF files directly here ──
+  const ggufFiles = files.filter((f) => f.endsWith('.gguf'));
+  if (ggufFiles.length > 0 && rel) {
+    out.push({ id: rel, type: 'gguf', localPath: currentDir });
+    return;
+  }
+
+  // ── ONNX/safetensors + config.json ──
+  if (files.includes('config.json') && rel) {
+    const hasOnnx = files.some((f) => f.endsWith('.onnx') || f.endsWith('.safetensors'));
+    if (hasOnnx) {
+      out.push({ id: rel, type: 'onnx', localPath: currentDir });
+      return;
+    }
+  }
+
+  // ── Recurse into subdirs ──
+  for (const sub of subdirs) {
+    if (_SKIP_DIRS.has(sub)) continue;
+    const newRel = rel ? `${rel}/${sub}` : sub;
+    _scanRecursive(baseDir, join(currentDir, sub), newRel, depth + 1, out);
+  }
+}
+
+export function scanModelsDirTyped(dir: string): ScannedModel[] {
+  if (!existsSync(dir)) return [];
+  const raw: ScannedModel[] = [];
+  _scanRecursive(dir, dir, '', 0, raw);
+  const seen = new Map<string, ScannedModel>();
+  for (const m of raw) {
+    if (!seen.has(m.id)) seen.set(m.id, m);
+  }
+  return [...seen.values()];
+}
+
+// Backward-compat — only ONNX models (loadable with transformers.js)
+export function scanModelsDir(dir: string): string[] {
+  return scanModelsDirTyped(dir).filter((m) => m.type === 'onnx').map((m) => m.id);
 }
 
 export async function listLocalModels(): Promise<ModelInfo[]> {
