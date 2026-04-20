@@ -20,6 +20,7 @@ import {
   areDepsInstalled,
   installDeps,
   scanModelsDirTyped,
+  scanOllamaModels,
 } from '../core/localInference';
 import {
   streamAgentChat,
@@ -796,6 +797,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       const scannedGguf = scanned
         .filter((m) => m.type === 'gguf')
         .map((m) => m.id);
+      const ollamaModels = scanOllamaModels().map((m) => m.id);
 
       this._post({
         type: 'modelsLoaded',
@@ -804,6 +806,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         localCatalog: AVAILABLE_MODELS,
         scannedModels: scannedOnnx,
         ggufModels: scannedGguf,
+        ollamaModels,
         loadedModel: loaded,
         needsModelsDir: !modelsDir,
         modelsDir,

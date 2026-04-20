@@ -1139,6 +1139,16 @@ window.addEventListener('message', function(event) {
             mSel.appendChild(opt);
           });
         }
+        if (d.ollamaModels && d.ollamaModels.length > 0) {
+          var ollamaSep = document.createElement('option'); ollamaSep.disabled = true;
+          ollamaSep.textContent = '── Ollama (usa vía Ollama) ──'; mSel.appendChild(ollamaSep);
+          d.ollamaModels.forEach(function(id) {
+            var opt = document.createElement('option');
+            opt.value = ''; opt.disabled = true;
+            opt.textContent = '🟣 ' + id;
+            mSel.appendChild(opt);
+          });
+        }
         var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '── Descargar modelo ──'; mSel.appendChild(sep);
         d.localCatalog.forEach(function(m) {
           if (m.id === d.loadedModel) return;

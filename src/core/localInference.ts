@@ -1,7 +1,8 @@
 import { logger } from '../utils/logger';
 import type { ChatMessage, StreamOptions, ModelInfo } from './llmService';
 import { execFile } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, statSync, readFileSync } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -272,7 +273,7 @@ export async function streamChatLocal(
 
 export interface ScannedModel {
   id: string;
-  type: 'onnx' | 'gguf';
+  type: 'onnx' | 'gguf' | 'ollama';
   localPath: string;
 }
 
@@ -353,6 +354,53 @@ function _scanRecursive(
     const newRel = rel ? `${rel}/${sub}` : sub;
     _scanRecursive(baseDir, join(currentDir, sub), newRel, depth + 1, out);
   }
+}
+
+/**
+ * Scan Ollama's manifest store and return models as informational entries.
+ * Ollama uses a blob/manifest system — models are NOT movable as plain files.
+ * Models are read-only informational: shown in UI but not loadable by the extension.
+ *
+ * Layout: $OLLAMA_MODELS/manifests/registry.ollama.ai/library/{name}/{tag}
+ * Each manifest file is JSON — presence of the file means the model is pulled.
+ */
+export function scanOllamaModels(): ScannedModel[] {
+  const base = process.env.OLLAMA_MODELS
+    ?? join(homedir(), '.ollama', 'models');
+  const libraryDir = join(base, 'manifests', 'registry.ollama.ai', 'library');
+
+  if (!existsSync(libraryDir)) return [];
+
+  const results: ScannedModel[] = [];
+  let modelDirs: string[];
+  try { modelDirs = readdirSync(libraryDir); } catch { return []; }
+
+  for (const modelName of modelDirs) {
+    const modelPath = join(libraryDir, modelName);
+    try {
+      if (!statSync(modelPath).isDirectory()) continue;
+      const tags = readdirSync(modelPath);
+      for (const tag of tags) {
+        const manifestPath = join(modelPath, tag);
+        try {
+          if (statSync(manifestPath).isFile()) {
+            // Validate it's a real manifest (has JSON with schemaVersion)
+            const raw = readFileSync(manifestPath, 'utf8');
+            const manifest = JSON.parse(raw) as Record<string, unknown>;
+            if (manifest.schemaVersion) {
+              results.push({
+                id: `${modelName}:${tag}`,
+                type: 'ollama',
+                localPath: modelPath,
+              });
+            }
+          }
+        } catch { /* skip corrupt manifests */ }
+      }
+    } catch { /* skip unreadable dirs */ }
+  }
+
+  return results;
 }
 
 export function scanModelsDirTyped(dir: string): ScannedModel[] {
