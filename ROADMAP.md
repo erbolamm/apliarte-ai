@@ -103,70 +103,258 @@ ApliArte AI empezó como un chat de IA local y privado para VS Code. La visión 
 
 ### v0.9 — Rendimiento local, contexto quirúrgico y UX avanzada
 
-#### Feature 1 — Monitor de rendimiento de inferencia local
+> **Estado**: parcialmente completo. Features 1 y 3 terminadas. Feature 2 y los "Otros items" pendientes.
 
-Problema: el usuario no sabe por qué la generación es lenta. No sabe si el modelo es demasiado grande para su hardware, si WebGPU está activo, ni qué hacer para mejorar la experiencia.
+#### Feature 1 — Monitor de rendimiento ✅ COMPLETO
 
-- [x] **Indicador de tokens/segundo** en el toolbar del chat (badge pequeño, aparece al terminar cada respuesta)
-  - `localInference.ts`: mide tiempo desde primer token hasta último, cuenta invocaciones del `TextStreamer` callback, calcula `t/s`
-  - `StreamOptions.onStats` callback — tipado en `llmService.ts` como `InferenceStats`
-  - `ChatProvider`: al recibir stats, actualiza status bar de VS Code (`$(zap) 12.3 t/s`) y postea `inferenceStats` al webview
-- [x] **Sugerencia de cambio de modelo** cuando `t/s < 8` (umbral empírico de "experiencia fluida")
-  - Banner no invasivo sobre la barra de input: `"Generación lenta (3.2 t/s). ¿Cambiar a Qwen 0.5B para respuestas instantáneas?"` + botón `Cambiar` + botón `✕`
-  - El botón aplica el cambio directo sin abrir settings — llama al mismo handler que el `model-select`
-  - No se muestra de nuevo por 10 minutos si el usuario lo descarta (localStorage)
-- [x] Badge colorea: verde ≥ 8 t/s, naranja 4–8 t/s, rojo < 4 t/s
-- [x] Status bar de VS Code muestra `$(zap) 12.3 t/s` durante 8 segundos post-respuesta
+- [x] Badge `t/s` en toolbar (verde ≥ 8, naranja 4–8, rojo < 4)
+- [x] Status bar `⚡ 12.3 t/s` durante 8s post-respuesta
+- [x] Slow-banner con sugerencia de modelo más rápido (cooldown 10 min via localStorage)
+- [x] `InferenceStats` + `onStats` callback en `StreamOptions`
 
-**Archivos**: `src/core/llmService.ts`, `src/core/localInference.ts`, `src/ui/chatView.ts`
+#### Feature 2 — Zero-Pollution Retrieval (pendiente)
 
-#### Feature 2 — Zero-Pollution Retrieval (contexto determinista con ripgrep)
+Problema: el RAG vectorial inyecta ruido — resultados semánticamente parecidos pero lógicamente irrelevantes. Los modelos pequeños se confunden.
 
-Problema: el RAG vectorial inyecta ruido al contexto — resultados vagamente similares semánticamente pero irrelevantes lógicamente. Los modelos pequeños se confunden con ese ruido.
+**2a — ripgrep en searchCode** ✅ COMPLETO
+- [x] `searchCode` usa `rg` si disponible, fallback silencioso a `findFiles`
+- [x] Respeta `.gitignore` — nunca toca `node_modules/dist`
+- [x] `ENOENT` → fallback automático sin romper nada
 
-- [x] **Integrar `ripgrep` como motor de búsqueda en modo Agent** — `searchCode` usa `rg` si disponible, fallback a `findFiles`
-  - Respeta `.gitignore` nativamente — nunca indexa `node_modules`, `dist`, etc.
-  - `ENOENT` → fallback silencioso, sin romper nada si `rg` no está instalado
-- [ ] **Extracción de firmas** (solo funciones/clases/interfaces, no el cuerpo completo) para el contexto estructural
-  - Patterns por lenguaje: TypeScript/JS, Python, Go, Rust
-  - Objetivo: contexto `< 20%` del tamaño de RAG vectorial típico
-- [ ] `indexWorkspace` refactorizado: usa `rg --files-with-matches` para listar archivos relevantes
+**2b — Extracción de firmas** (PENDIENTE)
 
-**Archivos**: `src/tools/executor.ts`, `src/core/agentService.ts`, `src/extension.ts`
+Objetivo: cuando el agente necesita entender la estructura de un archivo, enviarle SOLO las firmas (función/clase/interfaz) sin el cuerpo. Reduce el contexto a <20% del tamaño original.
 
-#### Feature 3 — "Multiverso": alternativas ramificadas de código
+Implementación en `src/tools/executor.ts` — nueva herramienta `extractSignatures(filePath)`:
 
-Problema: el ciclo real de trabajo con IA es no lineal. Si la primera respuesta no es óptima, el usuario tiene que hacer scroll por un historial largo para comparar variantes.
+```typescript
+// Patterns por lenguaje (usar con rg --multiline-dotall o línea a línea)
+const SIGNATURE_PATTERNS: Record<string, string[]> = {
+  ts: [
+    '^(export\\s+)?(default\\s+)?(async\\s+)?function[\\s*]\\w+',
+    '^(export\\s+)?(abstract\\s+)?class\\s+\\w+',
+    '^(export\\s+)?interface\\s+\\w+',
+    '^(export\\s+)?type\\s+\\w+\\s*[=<]',
+    '^(export\\s+)?const\\s+\\w+\\s*=\\s*(async\\s+)?\\(',   // arrow functions
+  ],
+  py: [
+    '^(async\\s+)?def\\s+\\w+',
+    '^class\\s+\\w+',
+  ],
+  go: [
+    '^func\\s+(\\(\\w+\\s+\\*?\\w+\\)\\s+)?\\w+',
+    '^type\\s+\\w+\\s+(struct|interface)',
+  ],
+  rs: [
+    '^(pub(\\(\\w+\\))?\\s+)?(async\\s+)?fn\\s+\\w+',
+    '^(pub(\\(\\w+\\))?\\s+)?struct\\s+\\w+',
+    '^(pub(\\(\\w+\\))?\\s+)?trait\\s+\\w+',
+    '^(pub(\\(\\w+\\))?\\s+)?enum\\s+\\w+',
+  ],
+};
 
-- [x] **Botón "⟳ Alt"** en cada bloque de código del chat
-  - Envía `requestAlternative` con el código original; extensión llama al LLM con micro-prompt focalizado
-  - La variante aparece como pestaña `❷` dentro del mismo bloque — no contamina el historial
-- [x] **UI de pestañas** `❶ ❷ ❸` — copy/insert/apply siempre usan el tab activo
+// Llamada: rg --line-number --no-heading --smart-case -e PATTERN file
+// Concatenar resultados de todos los patterns del lenguaje detectado
+// Retornar: "file.ts — 12 signatures found\n  L4: export function foo(...\n  L18: class Bar..."
+```
+
+Añadir al `ToolRegistry` como built-in tool disponible en Agent y Remote.
+
+**2c — `indexWorkspace` refactorizado** (PENDIENTE)
+
+En `src/core/agentService.ts`, la función `indexWorkspace` actualmente usa `vscode.workspace.findFiles`. Refactorizar para que use `rg --files` cuando disponible:
+
+```typescript
+// Antes: vscode.workspace.findFiles('**/*', excludePattern)
+// Después:
+async function listWorkspaceFiles(root: string): Promise<string[]> {
+  try {
+    const out = await execRg(['--files', '--follow'], root);
+    return out.split('\n').filter(Boolean);
+  } catch {
+    // fallback a findFiles
+    const uris = await vscode.workspace.findFiles('**/*', '{**/node_modules/**,**/dist/**}');
+    return uris.map(u => u.fsPath);
+  }
+}
+```
+
+**Archivos a modificar**: `src/tools/executor.ts`, `src/core/agentService.ts`
+
+#### Feature 3 — Multiverso ✅ COMPLETO
+
+- [x] Botón `⟳ Alt` en bloques de código
+- [x] Pestañas `❶ ❷ ❸` — copy/insert/apply usan tab activo
 - [x] Máximo 3 alternativas por bloque
-- [x] En modo Local: botón deshabilitado (modelos pequeños no manejan bien la variación)
+- [x] Deshabilitado en modo Local
 
-**Archivos**: `src/ui/chatView.ts`
+#### Feature 4 — Jan como proveedor Remote (PENDIENTE)
 
-#### Otros items de v0.9
+Jan es una app local de IA con API OpenAI-compatible en `http://localhost:1337/v1`.
+Misma integración que LM Studio/Ollama — solo hay que agregarlo a la detección automática.
 
-- [ ] **Jan como proveedor Remote** (`http://localhost:1337/v1` — API OpenAI-compatible)
-- [ ] **GGUF nativo**: integrar `node-llama-cpp` (binarios por plataforma) para inferencia sin LM Studio/Ollama
-- [ ] Quick-setup para servidores MCP populares:
-  - GitHub (issues, PRs, repos)
-  - PostgreSQL / SQLite
-  - Browser / Playwright
-- [ ] Templates de configuración MCP por stack (Node, Python, Go, etc.)
+**Cambios en `src/core/llmService.ts`**:
 
-### v1.0 — Release estable
+```typescript
+// En testConnection() / detectProvider() — agregar Jan al auto-scan:
+const REMOTE_CANDIDATES = [
+  { name: 'LM Studio', base: 'http://localhost:1234/v1' },
+  { name: 'Ollama',    base: 'http://localhost:11434/v1' },
+  { name: 'Jan',       base: 'http://localhost:1337/v1' },   // ← NUEVO
+];
 
-- [ ] Documentación completa del MCP Client
-- [ ] Tests automatizados del cliente JSON-RPC y del `toolRegistry`
-- [ ] Marketplace con screenshots actualizados
-- [ ] Breaking changes resueltos, API estable
+// Cada candidato: GET /models, si responde con { data: [...] } → conectado
+// Guardar el base URL del que responde primero
+```
+
+**Cambios en `src/ui/chatView.ts`**:
+
+- En la UI de connectionStatus: mostrar "Jan" como nombre cuando el endpoint es `1337`
+- En `_getWebviewContent()`: añadir Jan al texto del placeholder del endpoint input
+
+**Archivos a modificar**: `src/core/llmService.ts`, `src/ui/chatView.ts`
+
+#### Feature 5 — GGUF nativo con node-llama-cpp (PENDIENTE)
+
+Permite cargar modelos `.gguf` directamente, sin LM Studio ni Ollama. Complementa el modo Local actual (que solo soporta ONNX via transformers.js).
+
+**Nuevo archivo**: `src/core/ggufInference.ts` — paralelo a `localInference.ts`:
+
+```typescript
+// Instala node-llama-cpp on-demand en globalStorageUri (igual que transformers.js)
+// Usa LlamaModel + LlamaContext + LlamaChatSession de node-llama-cpp
+// Expone: loadGgufModel(path), streamChatGguf(messages, onChunk, options)
+// Detecta plataforma: darwin/linux/win32 — node-llama-cpp tiene binarios precompilados
+
+export async function installGgufDeps(onProgress?: (msg: string) => void): Promise<void> {
+  // npm install --production node-llama-cpp en depsDir
+}
+
+export async function loadGgufModel(
+  filePath: string,  // ruta absoluta al .gguf
+  onProgress?: (pct: number) => void
+): Promise<void> {
+  // const { getLlama, LlamaChatSession } = await import(ggufPath)
+  // _llama = await getLlama()
+  // _model = await _llama.loadModel({ modelPath: filePath })
+  // _context = await _model.createContext()
+}
+
+export async function streamChatGguf(
+  messages: ChatMessage[],
+  onChunk: (text: string) => void,
+  options?: StreamOptions
+): Promise<void> {
+  // const session = new LlamaChatSession({ contextSequence: _context.getSequence() })
+  // await session.prompt(lastUserMessage, { onTextChunk: onChunk, signal: options?.signal })
+}
+```
+
+**Integración en `chatView.ts`**:
+- En el model selector: bajo "── GGUF (nativo) ──" listar los `.gguf` encontrados en `modelsDir`
+- `scanModelsDir` ya detecta `.gguf` — solo hay que filtrarlos y mostrarlos por separado
+- Al seleccionar: llamar `loadGgufModel(absolutePath)` en vez de `loadModel(modelId)`
+
+**Archivos nuevos/modificados**: `src/core/ggufInference.ts`, `src/ui/chatView.ts`, `src/core/localInference.ts` (reexport utils comunes)
+
+#### Feature 6 — Quick-setup MCP populares (PENDIENTE)
+
+Ya existe el patrón en `chatView.ts` para añadir `server-memory` y `server-filesystem` con 1 click. Extender con más servidores.
+
+**Cambios solo en `src/ui/chatView.ts`** — sección de Settings, función `_getMcpQuickSetups()`:
+
+```typescript
+const MCP_QUICK_SETUPS = [
+  // Ya implementados:
+  { id: 'memory',     label: '🧠 Memoria persistente',  pkg: '@modelcontextprotocol/server-memory',     args: [] },
+  { id: 'filesystem', label: '📁 Filesystem',            pkg: '@modelcontextprotocol/server-filesystem', args: [vscode.workspace.rootPath ?? ''] },
+  // NUEVOS:
+  {
+    id: 'github',
+    label: '🐙 GitHub',
+    pkg: '@modelcontextprotocol/server-github',
+    args: [],
+    env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' },   // usuario rellena después
+    note: 'Requiere GITHUB_PERSONAL_ACCESS_TOKEN en la config del servidor',
+  },
+  {
+    id: 'postgres',
+    label: '🐘 PostgreSQL',
+    pkg: '@modelcontextprotocol/server-postgres',
+    args: [],
+    env: { POSTGRES_CONNECTION_STRING: 'postgresql://user:pass@localhost/db' },
+    note: 'Ajustá POSTGRES_CONNECTION_STRING en la config',
+  },
+  {
+    id: 'sqlite',
+    label: '🗃️ SQLite',
+    pkg: '@modelcontextprotocol/server-sqlite',
+    args: ['--db-path', '${workspaceFolder}/db.sqlite'],
+  },
+  {
+    id: 'playwright',
+    label: '🎭 Browser (Playwright)',
+    pkg: '@playwright/mcp',
+    args: [],
+    note: 'Permite al LLM navegar por el browser y hacer screenshots',
+  },
+];
+```
+
+Al hacer click en un botón: genera el objeto de config `mcpServers` y lo escribe vía `vscode.workspace.getConfiguration('apliarteAi').update('mcpServers', ...)`.
+
+#### Feature 7 — Templates de config MCP por stack (PENDIENTE)
+
+En Settings, sección "Plantillas de inicio rápido". Selector de stack que pre-configura un conjunto de servidores MCP de golpe.
+
+```typescript
+const MCP_STACK_TEMPLATES = {
+  'Node.js / TypeScript': ['memory', 'filesystem', 'github'],
+  'Python':               ['memory', 'filesystem', 'postgres'],
+  'Go':                   ['memory', 'filesystem', 'github'],
+  'Full-stack web':        ['memory', 'filesystem', 'github', 'playwright'],
+};
+// Al aplicar: añade todos los servidores del stack de una sola vez
+```
+
+**Archivos a modificar**: solo `src/ui/chatView.ts`
 
 ---
 
-## Arquitectura actual (v0.8)
+### v1.0 — Release estable
+
+Foco: calidad, estabilidad y documentación. Sin features nuevas grandes.
+
+#### 1.0.1 — Tests del cliente MCP
+
+- [ ] Tests unitarios para `src/mcp/jsonrpc.ts`: serialización/deserialización JSON-RPC 2.0, IDs de requests, manejo de errores, batch requests
+- [ ] Tests de integración para `src/mcp/serverManager.ts`: spawn/stop/restart de proceso stdio, reconexión HTTP, timeout handling
+- [ ] Tests para `src/mcp/toolRegistry.ts`: namespace collision, builtin vs MCP dispatch, tool not found
+- [ ] Framework: `@vscode/test-cli` + `mocha` (ya en devDependencies)
+- [ ] Añadir script `"test": "vscode-test"` al `package.json`
+
+#### 1.0.2 — Documentación del MCP Client
+
+- [ ] `docs/mcp.md`: guía completa — qué es MCP, cómo configurar `apliarteAi.mcpServers`, ejemplos para cada transporte
+- [ ] `docs/mcp.md`: sección "Crear tu propio servidor MCP" con ejemplo mínimo en TypeScript y Python
+- [ ] Actualizar `GUIDE.md` con sección MCP
+- [ ] Actualizar `README.md` con tabla de servidores MCP verificados
+
+#### 1.0.3 — Estabilidad de API y breaking changes
+
+- [ ] Deprecar formalmente `apliarteAi.engramEndpoint` (ya marcado) — eliminar en v1.0
+- [ ] Revisar todos los `settings` en `package.json`: descripciones completas, ejemplos, valores por defecto correctos
+- [ ] Asegurar que `chatView.ts` no use `innerHTML` con contenido sin sanitizar (XSS en webview)
+
+#### 1.0.4 — Marketplace
+
+- [ ] Screenshots actualizados (v0.9 UI — sidebar conversaciones, MCP badges, Multiverso tabs, t/s badge)
+- [ ] GIF animado en README mostrando el flujo completo: Local → chat → Alt → aplicar diff
+- [ ] Categorías y tags del Marketplace revisados
+
+---
+
+## Arquitectura actual (v0.9)
 
 ```
 Modo Remote / Local
@@ -177,11 +365,28 @@ Usuario → Chat UI → chatView.ts → llmService.streamChatWithTools()
                                        ↓
                                toolRegistry.execute()
                                    ├── built-in? → executor.ts
+                                   │       ├── readFile / writeFile / listFiles
+                                   │       ├── searchCode  ← rg + fallback findFiles
+                                   │       ├── extractSignatures  (v0.9 pendiente)
+                                   │       └── runTerminal
                                    └── MCP tool? → serverManager.ts
                                                      ↓ JSON-RPC
-                                                  engram / filesystem / ...
+                                                  engram / filesystem / github / ...
                                        ↓
                                tool result → LLM continúa (loop ≤10)
+
+Modo Local (inferencia en proceso)
+─────────────────────────────────────────────────────────────
+Usuario → Chat UI → chatView.ts → localInference.streamChatLocal()
+                                       ↓ TextStreamer callback
+                               chunk por chunk → webview
+                                       ↓ onStats callback
+                               InferenceStats { t/s, tokens, model }
+                                       ↓
+                               chatView._handleInferenceStats()
+                                   ├── status bar ⚡ 12.3 t/s (8s)
+                                   ├── tps-badge en toolbar
+                                   └── slow-banner si t/s < 8
 
 Modo Agent
 ─────────────────────────────────────────────────────────────
@@ -191,7 +396,7 @@ Usuario → Chat UI → chatView.ts → agentService.streamAgentChat()
                                        ↓ tool_call event
                                chatView.ts ← SSE ← Backend
                                        ↓
-                               toolRegistry.execute()  (mismo registry)
+                               toolRegistry.execute()  (mismo registry que Remote)
                                    ├── built-in? → executor.ts
                                    └── MCP tool? → serverManager.ts
                                                      ↓ JSON-RPC
