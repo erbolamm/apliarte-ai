@@ -121,7 +121,7 @@ Problema: el RAG vectorial inyecta ruido — resultados semánticamente parecido
 - [x] Respeta `.gitignore` — nunca toca `node_modules/dist`
 - [x] `ENOENT` → fallback automático sin romper nada
 
-**2b — Extracción de firmas** (PENDIENTE)
+**2b — Extracción de firmas** ✅ COMPLETO
 
 Objetivo: cuando el agente necesita entender la estructura de un archivo, enviarle SOLO las firmas (función/clase/interfaz) sin el cuerpo. Reduce el contexto a <20% del tamaño original.
 
@@ -257,7 +257,7 @@ export async function streamChatGguf(
 
 **Archivos nuevos/modificados**: `src/core/ggufInference.ts`, `src/ui/chatView.ts`, `src/core/localInference.ts` (reexport utils comunes)
 
-#### Feature 6 — Quick-setup MCP populares (PENDIENTE)
+#### Feature 6 — Quick-setup MCP populares ✅ COMPLETO
 
 Ya existe el patrón en `chatView.ts` para añadir `server-memory` y `server-filesystem` con 1 click. Extender con más servidores.
 
@@ -303,7 +303,7 @@ const MCP_QUICK_SETUPS = [
 
 Al hacer click en un botón: genera el objeto de config `mcpServers` y lo escribe vía `vscode.workspace.getConfiguration('apliarteAi').update('mcpServers', ...)`.
 
-#### Feature 7 — Templates de config MCP por stack (PENDIENTE)
+#### Feature 7 — Templates de config MCP por stack ✅ COMPLETO
 
 En Settings, sección "Plantillas de inicio rápido". Selector de stack que pre-configura un conjunto de servidores MCP de golpe.
 

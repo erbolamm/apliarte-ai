@@ -377,16 +377,43 @@ function copyMovePrompt() {
 }
 
 /* ── MCP quick setup ───────────────────────────────────────── */
+var MCP_PRESETS = {
+  memory: { name: 'memory', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] } },
+  github: { name: 'github', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' } } },
+  postgres: { name: 'postgres', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-postgres'], env: { POSTGRES_CONNECTION_STRING: 'postgresql://user:pass@localhost/db' } } },
+  sqlite: { name: 'sqlite', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sqlite', '--db-path', './db.sqlite'] } },
+  playwright: { name: 'playwright', config: { transport: 'stdio', command: 'npx', args: ['-y', '@playwright/mcp'] } },
+};
+
+var MCP_STACKS = {
+  node:      ['memory', 'filesystem', 'github'],
+  python:    ['memory', 'filesystem', 'postgres'],
+  go:        ['memory', 'filesystem', 'github'],
+  fullstack: ['memory', 'filesystem', 'github', 'playwright'],
+};
+
 function addMcpPreset(type) {
-  if (type === 'memory') {
-    vscode.postMessage({ type: 'addMcpServer', name: 'memory', config: {
-      transport: 'stdio',
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-memory']
-    }});
-  } else if (type === 'filesystem') {
+  if (type === 'filesystem') {
     vscode.postMessage({ type: 'chooseMcpFolder' });
+    return;
   }
+  var preset = MCP_PRESETS[type];
+  if (preset) {
+    vscode.postMessage({ type: 'addMcpServer', name: preset.name, config: preset.config });
+  }
+}
+
+function applyMcpStack(stack) {
+  var servers = MCP_STACKS[stack];
+  if (!servers) return;
+  servers.forEach(function(s) {
+    if (s === 'filesystem') {
+      vscode.postMessage({ type: 'chooseMcpFolder' });
+    } else {
+      var preset = MCP_PRESETS[s];
+      if (preset) vscode.postMessage({ type: 'addMcpServer', name: preset.name, config: preset.config });
+    }
+  });
 }
 
 /* ── HF Hub browser ────────────────────────────────────────── */

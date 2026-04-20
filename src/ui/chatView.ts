@@ -1388,8 +1388,47 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
               <div class="mcp-preset-desc" data-i18n="mcp_fs_desc">El agente puede leer y escribir en una carpeta de tu máquina</div>
             </div>
           </button>
+          <button class="mcp-preset-btn" onclick="addMcpPreset('github')">
+            <span class="preset-icon">🐙</span>
+            <div>
+              <div>GitHub</div>
+              <div class="mcp-preset-desc">Issues, PRs y búsqueda de código. Requiere un Personal Access Token.</div>
+            </div>
+          </button>
+          <button class="mcp-preset-btn" onclick="addMcpPreset('postgres')">
+            <span class="preset-icon">🐘</span>
+            <div>
+              <div>PostgreSQL</div>
+              <div class="mcp-preset-desc">Consultas SQL sobre tu base de datos local o remota.</div>
+            </div>
+          </button>
+          <button class="mcp-preset-btn" onclick="addMcpPreset('sqlite')">
+            <span class="preset-icon">🗃️</span>
+            <div>
+              <div>SQLite</div>
+              <div class="mcp-preset-desc">Consultas sobre un archivo .sqlite en tu proyecto.</div>
+            </div>
+          </button>
+          <button class="mcp-preset-btn" onclick="addMcpPreset('playwright')">
+            <span class="preset-icon">🎭</span>
+            <div>
+              <div>Browser (Playwright)</div>
+              <div class="mcp-preset-desc">El agente puede navegar webs, hacer click y tomar screenshots.</div>
+            </div>
+          </button>
         </div>
         <div class="settings-hint" style="margin-top:6px;" data-i18n="s_mcp_local_hint">Requiere Node.js. Se agrega a apliarteAi.mcpServers automáticamente.</div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">🗂️ Plantillas de stack MCP</div>
+        <p class="settings-hint" style="margin-bottom:8px;">Configura un conjunto de servidores MCP de una sola vez según tu stack.</p>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="mcp-preset-btn" onclick="applyMcpStack('node')"><span class="preset-icon">🟩</span><div><div>Node.js / TypeScript</div><div class="mcp-preset-desc">memory + filesystem + github</div></div></button>
+          <button class="mcp-preset-btn" onclick="applyMcpStack('python')"><span class="preset-icon">🐍</span><div><div>Python</div><div class="mcp-preset-desc">memory + filesystem + postgres</div></div></button>
+          <button class="mcp-preset-btn" onclick="applyMcpStack('go')"><span class="preset-icon">🐹</span><div><div>Go</div><div class="mcp-preset-desc">memory + filesystem + github</div></div></button>
+          <button class="mcp-preset-btn" onclick="applyMcpStack('fullstack')"><span class="preset-icon">🌐</span><div><div>Full-stack web</div><div class="mcp-preset-desc">memory + filesystem + github + playwright</div></div></button>
+        </div>
       </div>
 
       <div class="settings-section">

@@ -73,6 +73,14 @@ const builtinSpecs = {
       required: ['command'],
     },
   },
+  extractSignatures: {
+    description: 'Extract function, class, interface and type signatures from a source file. Returns only the declarations (no bodies), reducing context by ~80%.',
+    inputSchema: {
+      type: 'object',
+      properties: { path: { type: 'string', description: 'Path relative to workspace root' } },
+      required: ['path'],
+    },
+  },
 } as const;
 
 // Register built-ins with the shared registry on module load. Idempotent enough
@@ -83,6 +91,7 @@ _registry.registerBuiltin('writeFile', builtinSpecs.writeFile, (args) => writeFi
 _registry.registerBuiltin('listFiles', builtinSpecs.listFiles, (args) => listFiles(args.path as string, args.recursive as boolean));
 _registry.registerBuiltin('searchCode', builtinSpecs.searchCode, (args) => searchCode(args.query as string, args.path as string | undefined));
 _registry.registerBuiltin('runTerminal', builtinSpecs.runTerminal, (args) => runTerminal(args.command as string));
+_registry.registerBuiltin('extractSignatures', builtinSpecs.extractSignatures, (args) => extractSignatures(args.path as string));
 
 /**
  * Execute a tool call and return the result.
@@ -301,6 +310,62 @@ async function runTerminal(command: string): Promise<string> {
       },
     );
   });
+}
+
+const SIGNATURE_PATTERNS: Record<string, RegExp[]> = {
+  ts: [
+    /^(export\s+)?(default\s+)?(async\s+)?function[\s*]\w+/,
+    /^(export\s+)?(abstract\s+)?class\s+\w+/,
+    /^(export\s+)?interface\s+\w+/,
+    /^(export\s+)?type\s+\w+\s*[=<]/,
+    /^(export\s+)?const\s+\w+\s*=\s*(async\s+)?\(/,
+  ],
+  js: [
+    /^(export\s+)?(default\s+)?(async\s+)?function[\s*]\w+/,
+    /^(export\s+)?class\s+\w+/,
+    /^(export\s+)?const\s+\w+\s*=\s*(async\s+)?\(/,
+  ],
+  py: [
+    /^(async\s+)?def\s+\w+/,
+    /^class\s+\w+/,
+  ],
+  go: [
+    /^func\s+(\(\w+\s+\*?\w+\)\s+)?\w+/,
+    /^type\s+\w+\s+(struct|interface)/,
+  ],
+  rs: [
+    /^(pub(\(\w+\))?\s+)?(async\s+)?fn\s+\w+/,
+    /^(pub(\(\w+\))?\s+)?struct\s+\w+/,
+    /^(pub(\(\w+\))?\s+)?trait\s+\w+/,
+    /^(pub(\(\w+\))?\s+)?enum\s+\w+/,
+  ],
+};
+
+async function extractSignatures(filePath: string): Promise<string> {
+  const root = getWorkspaceRoot();
+  const absPath = path.resolve(root, filePath);
+  const ext = path.extname(filePath).slice(1).toLowerCase();
+  const patterns = SIGNATURE_PATTERNS[ext] ?? SIGNATURE_PATTERNS['js'];
+
+  let bytes: Uint8Array;
+  try {
+    bytes = await vscode.workspace.fs.readFile(vscode.Uri.file(absPath));
+  } catch {
+    return `Cannot read file: ${filePath}`;
+  }
+
+  const lines = Buffer.from(bytes).toString('utf-8').split('\n');
+  const hits: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim();
+    if (patterns.some(p => p.test(trimmed))) {
+      hits.push(`  L${i + 1}: ${trimmed.slice(0, 120)}`);
+    }
+  }
+
+  if (hits.length === 0) return `No signatures found in ${filePath}`;
+  return `${filePath} — ${hits.length} signatures\n${hits.join('\n')}`;
 }
 
 const TEXT_EXTENSIONS = new Set([
