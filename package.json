@@ -32,9 +32,6 @@
     "ia-gratis",
     "español"
   ],
-  "activationEvents": [
-    "onView:apliarteAi.chatView"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -51,7 +48,8 @@
         {
           "type": "webview",
           "id": "apliarteAi.chatView",
-          "name": "Chat"
+          "name": "Chat",
+          "icon": "$(comment-discussion)"
         },
         {
           "id": "apliarteAi.workspaceView",
