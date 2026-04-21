@@ -319,17 +319,17 @@ function applyLang(lang) {
     GUIDE_TEXTS['agent'].sub = 'Cloud Agent — check connection in Settings';
     GUIDE_TEXTS['agent'].guide = '☁️ <strong>Agent mode.</strong> Set the endpoint and API key in <i class="codicon codicon-settings-gear"></i> Settings.';
   } else {
-    GUIDE_TEXTS['local-needs-folder'].sub = 'Modo local — primero configurá tu carpeta de modelos';
+    GUIDE_TEXTS['local-needs-folder'].sub = 'Modo local — primero configura tu carpeta de modelos';
     GUIDE_TEXTS['local-needs-folder'].guide = '📁 <strong>¿Dónde están tus modelos?</strong><br>Elige la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.';
     GUIDE_TEXTS['local-needs-download'].sub = 'Modo local — inferencia en tu máquina, sin internet';
     GUIDE_TEXTS['local-needs-download'].guide = '⬇️ <strong>Primer paso:</strong> descarga el modelo Qwen 2.5 (0.5B, ~350MB).<br>Solo la primera vez — después carga en segundos.';
     GUIDE_TEXTS['local-ready'].sub = 'Modelo local listo — puedes escribir tu primer mensaje';
-    GUIDE_TEXTS['local-ready'].guide = '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribí tu pregunta abajo.';
+    GUIDE_TEXTS['local-ready'].guide = '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribe tu pregunta abajo.';
     GUIDE_TEXTS['remote-offline'].sub = 'LM Studio / Ollama — no detectado';
     GUIDE_TEXTS['remote-offline'].guide = '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abre <strong>LM Studio</strong> o <strong>Ollama</strong> y carga un modelo<br>• O cambia el proveedor a <strong>Local</strong> para inferencia sin instalar nada';
     GUIDE_TEXTS['remote-ready'].sub = 'Conectado — puedes escribir tu primer mensaje';
     GUIDE_TEXTS['agent'].sub = 'Agent Cloud — verificá la conexión en Configuración';
-    GUIDE_TEXTS['agent'].guide = '☁️ <strong>Modo Agente.</strong> Configurá el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.';
+    GUIDE_TEXTS['agent'].guide = '☁️ <strong>Modo Agente.</strong> Configura el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.';
   }
 }
 
@@ -931,7 +931,7 @@ var welcomeSub     = document.getElementById('welcome-sub');
 
 var GUIDE_TEXTS = {
   'local-needs-folder': {
-    sub: 'Modo local — primero configurá tu carpeta de modelos',
+    sub: 'Modo local — primero configura tu carpeta de modelos',
     guide: '📁 <strong>¿Dónde están tus modelos?</strong><br>Elige la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.',
     showBtn: false,
     showFolderBtn: true,
@@ -944,7 +944,7 @@ var GUIDE_TEXTS = {
   },
   'local-ready': {
     sub: 'Modelo local listo — puedes escribir tu primer mensaje',
-    guide: '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribí tu pregunta abajo.',
+    guide: '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribe tu pregunta abajo.',
     showBtn: false, showFolderBtn: false,
   },
   'remote-offline': {
@@ -958,7 +958,7 @@ var GUIDE_TEXTS = {
   },
   'agent': {
     sub: 'Agent Cloud — verificá la conexión en Configuración',
-    guide: '☁️ <strong>Modo Agente.</strong> Configurá el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.',
+    guide: '☁️ <strong>Modo Agente.</strong> Configura el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.',
     showBtn: false, showFolderBtn: false,
   },
 };
@@ -984,7 +984,7 @@ function updateWelcomeForProvider(state) {
 function triggerAutoDownload() {
   vscode.postMessage({ type: 'downloadModel', model: 'onnx-community/Qwen2.5-0.5B-Instruct' });
   if (welcomeDlBtn) welcomeDlBtn.style.display = 'none';
-  if (welcomeGuide) { welcomeGuide.innerHTML = '⏳ <strong>Descargando…</strong> Esto puede tardar unos minutos. Mirá la barra de progreso arriba.'; }
+  if (welcomeGuide) { welcomeGuide.innerHTML = '⏳ <strong>Descargando…</strong> Esto puede tardar unos minutos. Mira la barra de progreso arriba.'; }
 }
 
 /* ── Ready ─────────────────────────────────────────────────── */
@@ -1035,7 +1035,7 @@ window.addEventListener('message', function(event) {
     case 'responseError':
       streaming = false; sendB.style.display = 'flex'; stopB.style.display = 'none';
       var errHtml = '<div style="color:var(--vscode-errorForeground)"><i class="codicon codicon-warning"></i> ' + esc(d.text) + '</div>' +
-        '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verificá la conexión o los ajustes de la extensión.</div>';
+        '<div style="margin-top:4px;font-size:11px;opacity:.55;">Verifica la conexión o los ajustes de la extensión.</div>';
       if (curEl) { curEl.querySelector('.msg-body').innerHTML = errHtml; }
       else {
         hideWelcome();
@@ -1157,7 +1157,7 @@ window.addEventListener('message', function(event) {
           mSel.appendChild(opt);
         });
         if (!d.loadedModel && (!d.scannedModels || d.scannedModels.length === 0)) {
-          var hint = document.createElement('option'); hint.value = ''; hint.textContent = 'Seleccioná un modelo para descargar'; hint.selected = true;
+          var hint = document.createElement('option'); hint.value = ''; hint.textContent = 'Selecciona un modelo para descargar'; hint.selected = true;
           mSel.prepend(hint);
         }
       } else if (d.models && d.models.length > 0) {
@@ -1170,7 +1170,7 @@ window.addEventListener('message', function(event) {
         });
         updateWelcomeForProvider('remote-ready');
       } else {
-        var noOpt = document.createElement('option'); noOpt.value = ''; noOpt.textContent = 'Sin modelos — abrí LM Studio';
+        var noOpt = document.createElement('option'); noOpt.value = ''; noOpt.textContent = 'Sin modelos — abre LM Studio';
         mSel.appendChild(noOpt);
         updateWelcomeForProvider('remote-offline');
       }

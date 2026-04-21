@@ -1,6 +1,6 @@
 # Guía de usuario — ApliArte AI
 
-> Esta guía explica TODO lo que podés hacer con la extensión, paso a paso, sin asumir conocimientos previos.
+> Esta guía explica TODO lo que puedes hacer con la extensión, paso a paso, sin asumir conocimientos previos.
 
 ---
 
@@ -35,7 +35,7 @@ El modelo de IA corre **dentro de VS Code** usando tu CPU/GPU. No necesitás LM 
 ### Cómo activarlo
 
 1. Abrí el chat (ícono de ApliArte en la barra lateral)
-2. En el panel de configuración (ícono de engranaje ⚙️ dentro del chat), elegí **modo Local**
+2. En el panel de configuración (ícono de engranaje ⚙️ dentro del chat), elige **modo Local**
 3. La primera vez que mandés un mensaje, la extensión descarga automáticamente el modelo recomendado (~600 MB)
 4. Esperá la barra de progreso — después de eso, todo funciona offline
 
@@ -49,13 +49,13 @@ Por defecto usa **Qwen2.5-Coder-0.5B** (modelo pequeño, optimizado para código
 
 ## Modo Remote — LM Studio u Ollama en tu máquina
 
-Usás un modelo más grande que ya tenés en LM Studio u Ollama. La extensión se conecta a ellos localmente — **tu código no sale de tu máquina**.
+Usas un modelo más grande que ya tienes en LM Studio u Ollama. La extensión se conecta a ellos localmente — **tu código no sale de tu máquina**.
 
 ### Con LM Studio
 
-1. Descargá e instalá [LM Studio](https://lmstudio.ai)
-2. Descargá cualquier modelo (recomendado: Qwen2.5-Coder-7B, Llama 3.1, Mistral)
-3. En LM Studio, hacé click en **Local Server** (panel izquierdo) → **Start Server**
+1. Descarga e instala [LM Studio](https://lmstudio.ai)
+2. Descarga cualquier modelo (recomendado: Qwen2.5-Coder-7B, Llama 3.1, Mistral)
+3. En LM Studio, haz click en **Local Server** (panel izquierdo) → **Start Server**
 4. En ApliArte AI → configuración ⚙️ → modo **Remote** → URL: `http://localhost:1234/v1`
 5. Listo. El modelo que tengas cargado en LM Studio aparece automáticamente
 
@@ -96,7 +96,7 @@ Hay varias formas de darle contexto a la IA:
 - O: `Cmd+Shift+G` con el cursor en el archivo
 
 ### Selección de código
-1. Seleccioná el código en el editor
+1. Selecciona el código en el editor
 2. Click derecho → **ApliArte AI → Enviar selección al chat**
 3. O: `Cmd+Shift+G` con texto seleccionado
 
@@ -109,7 +109,7 @@ Hay varias formas de darle contexto a la IA:
 
 ## Acciones rápidas
 
-Con código seleccionado, click derecho → **ApliArte AI** → elegís la acción:
+Con código seleccionado, click derecho → **ApliArte AI** → elige la acción:
 
 | Acción | Atajo | Qué hace |
 |--------|-------|----------|
@@ -128,11 +128,11 @@ ApliArte AI guarda tus conversaciones automáticamente. Nunca perdés el histori
 
 ### Crear / cambiar conversación
 - Click en **Nueva conversación** (ícono `+` arriba del chat)
-- O hacé click en cualquier conversación anterior en el sidebar
+- O haz click en cualquier conversación anterior en el sidebar
 
 ### Renombrar
 - Doble click sobre el nombre de la conversación en el sidebar
-- Escribí el nuevo nombre → Enter
+- Escribe el nuevo nombre → Enter
 
 ### Exportar
 - Click derecho sobre una conversación → **Exportar** → guarda como Markdown
@@ -247,7 +247,7 @@ Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones 
 
 ### Reiniciar un servidor que falla
 
-Comando: `ApliArte AI: Reiniciar servidor MCP` → elegís cuál.
+Comando: `ApliArte AI: Reiniciar servidor MCP` → elige cuál.
 
 ---
 
@@ -261,7 +261,7 @@ Cuando la IA decide usar una herramienta, lo verás en el chat:
 
 Seguido del resultado (primeros 200 caracteres). La IA puede encadenar varias herramientas antes de darte la respuesta final.
 
-> **Modo Local**: los modelos pequeños generalmente no soportan tool-calling. Si tenés servidores MCP configurados, verás una nota avisándote.
+> **Modo Local**: los modelos pequeños generalmente no soportan tool-calling. Si tienes servidores MCP configurados, verás una nota avisándote.
 
 ---
 
@@ -308,12 +308,12 @@ En v0.7 se eliminó el panel específico de Engram. Ahora la IA interactúa con 
 
 ### El servidor MCP aparece en rojo (error)
 1. Abrí la palette de comandos → `ApliArte AI: Estado de servidores MCP` para ver el detalle del error
-2. Verificá que el servidor esté corriendo (para HTTP) o que el comando sea válido (para stdio)
+2. Verifica que el servidor esté corriendo (para HTTP) o que el comando sea válido (para stdio)
 3. Usá `ApliArte AI: Reiniciar servidor MCP` para intentar reconectar
 
 ### El modelo no responde / se queda cargando
 - Hay un timeout de 60 segundos para la respuesta y 30 segundos por herramienta
-- Si el modelo es muy lento, podés subir el timeout en la configuración (próxima versión)
+- Si el modelo es muy lento, puedes subir el timeout en la configuración (próxima versión)
 - Probá con un modelo más pequeño
 
 ### No aparecen los badges MCP en el chat

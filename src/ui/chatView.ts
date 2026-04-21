@@ -502,7 +502,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             await this._downloadLocalModel(recommended.id);
             this._post({ type: 'responseEnd' });
           } catch {
-            this._post({ type: 'responseError', text: 'Error descargando el modelo. Seleccioná uno manualmente.' });
+            this._post({ type: 'responseError', text: 'Error descargando el modelo. Selecciona uno manualmente.' });
             return;
           }
         } else {
@@ -596,8 +596,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     const endpoint = config.get<string>('agentEndpoint', '');
     const apiKey   = config.get<string>('agentApiKey', '');
 
-    if (!endpoint) throw new Error('Configurá apliarteAi.agentEndpoint en Settings.');
-    if (!apiKey)   throw new Error('Configurá apliarteAi.agentApiKey en Settings.');
+    if (!endpoint) throw new Error('Configura apliarteAi.agentEndpoint en Settings.');
+    if (!apiKey)   throw new Error('Configura apliarteAi.agentApiKey en Settings.');
 
     const folders = vscode.workspace.workspaceFolders;
     const workspaceId = folders?.[0]
