@@ -238,26 +238,26 @@
             "full-gentleman"
           ],
           "enumDescriptions": [
-            "Lite — Solo personalidad + SDD básico (~5k tokens). Ideal para modelos ≤ 8B",
-            "Medium — SDD + skills de foundation (~20k tokens). Para modelos 13B-30B",
-            "Full — Todo el ecosistema Gentleman (~49k tokens). Para modelos grandes o APIs"
+            "Lite — System prompt compacto (~5k tokens). Ideal para modelos ≤ 8B.",
+            "Medium — System prompt extendido (~20k tokens). Para modelos 13B-30B.",
+            "Full — System prompt completo (~49k tokens). Para modelos grandes o APIs en la nube."
           ],
-          "description": "Preset de configuración según la capacidad del modelo local"
+          "description": "Nivel de detalle del system prompt. A más tokens, mejor comportamiento pero más lento en modelos pequeños."
         },
         "apliarteAi.modelsDir": {
           "type": "string",
           "default": "",
-          "description": "Carpeta donde se guardan todos los modelos de IA locales. Vacío = carpeta por defecto en el almacenamiento de la extensión. Podés apuntar a un disco externo, tarjeta SD o cualquier ruta."
+          "markdownDescription": "Carpeta donde se guardan los modelos de IA locales (ONNX y GGUF). Vacío = almacenamiento interno de la extensión. Puedes apuntar a un disco externo, tarjeta SD o cualquier ruta. Ejemplo: `/Volumes/STAGING/ia`"
         },
         "apliarteAi.lmstudioEndpoint": {
           "type": "string",
           "default": "http://localhost:1234/v1",
-          "description": "URL del servidor LM Studio"
+          "markdownDescription": "URL base del servidor LM Studio. Por defecto `http://localhost:1234/v1`. Cámbialo si usas un puerto personalizado o un servidor remoto."
         },
         "apliarteAi.ollamaEndpoint": {
           "type": "string",
           "default": "http://localhost:11434",
-          "description": "URL del servidor Ollama"
+          "markdownDescription": "URL base del servidor Ollama. Por defecto `http://localhost:11434`. No incluyas `/v1` — la extensión lo añade automáticamente."
         },
         "apliarteAi.language": {
           "type": "string",
@@ -270,27 +270,22 @@
             "Español",
             "English"
           ],
-          "description": "Idioma del agente"
+          "description": "Idioma de la interfaz del chat. Cambia al instante sin reiniciar."
         },
         "apliarteAi.agentEndpoint": {
           "type": "string",
           "default": "",
-          "description": "URL de tu servidor de agente remoto (ej: https://mi-servidor.com). Dejá vacío para desactivar el modo Agente."
+          "markdownDescription": "URL de tu servidor de agente remoto. Ejemplo: `https://mi-servidor.com`. Déjalo vacío para desactivar el modo Agente. Consulta la guía del repositorio para desplegar tu propio backend."
         },
         "apliarteAi.agentApiKey": {
           "type": "string",
           "default": "",
-          "description": "API key de tu servidor de agente remoto"
-        },
-        "apliarteAi.engramEndpoint": {
-          "type": "string",
-          "default": "",
-          "markdownDeprecationMessage": "**Obsoleto** — usá `apliarteAi.mcpServers` en su lugar. Se migra automáticamente si está configurado."
+          "description": "API key del servidor de agente remoto. Se guarda en la configuración global de VS Code."
         },
         "apliarteAi.mcpServers": {
           "type": "object",
           "default": {},
-          "description": "Servidores MCP conectados. Cada entrada define transport (stdio o http) y su configuración. Ejemplo: { \"filesystem\": { \"transport\": \"stdio\", \"command\": \"npx\", \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"${workspaceFolder}\"] } }",
+          "markdownDescription": "Servidores MCP conectados. Cada clave es el nombre del servidor y el valor define su transporte.\n\n**Ejemplo stdio:**\n```json\n{\n  \"filesystem\": {\n    \"transport\": \"stdio\",\n    \"command\": \"npx\",\n    \"args\": [\"-y\", \"@modelcontextprotocol/server-filesystem\", \"/ruta/carpeta\"]\n  }\n}\n```\n\n**Ejemplo HTTP:**\n```json\n{\n  \"mi-servidor\": {\n    \"transport\": \"http\",\n    \"url\": \"http://localhost:8080/mcp\"\n  }\n}\n```",
           "additionalProperties": {
             "type": "object",
             "properties": {
