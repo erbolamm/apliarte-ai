@@ -1,9 +1,12 @@
 .vscode/**
+.windsurf/**
+.claude/**
 src/**
 test/**
 node_modules/**
 .gitignore
 tsconfig.json
+tsconfig.test.json
 esbuild.js
 **/*.map
 test-transformers.mjs
@@ -13,5 +16,5 @@ logs.md
 keys/**
 docs/**
 media/codicons/ico.png
-.claude/**
 estudio*
+*.vsix

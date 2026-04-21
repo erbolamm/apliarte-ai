@@ -107,13 +107,25 @@ Conecta cualquier servidor MCP y sus herramientas quedan disponibles para el LLM
 }
 ```
 
+**Servidores verificados:**
+
+| Servidor | Paquete | Herramientas |
+|----------|---------|-------------|
+| Memoria | `@modelcontextprotocol/server-memory` | Contexto persistente entre sesiones |
+| Filesystem | `@modelcontextprotocol/server-filesystem` | Leer/escribir archivos |
+| GitHub | `@modelcontextprotocol/server-github` | Issues, PRs, búsqueda de código |
+| PostgreSQL | `@modelcontextprotocol/server-postgres` | Consultas SQL |
+| SQLite | `@modelcontextprotocol/server-sqlite` | Bases de datos locales |
+| Browser | `@playwright/mcp` | Navegar webs, screenshots |
+
 - **Transporte stdio**: servidores locales (spawn de procesos)
 - **Transporte HTTP**: servidores MCP remotos (MCP Streamable HTTP)
 - Badges de estado en tiempo real en la toolbar
-- Panel colapsable con todas las tools disponibles por servidor
-- Quick-setup con un click para servidores populares (memory, filesystem)
+- Quick-setup con un click + plantillas por stack (Node/Python/Go/Full-stack)
 - **MCP Resources**: adjunta recursos de servidores MCP como contexto
 - **MCP Prompts**: acciones rápidas predefinidas desde servidores MCP
+
+[Documentación completa del cliente MCP →](docs/mcp.md)
 
 ### Bloques de tool calls
 
@@ -342,7 +354,7 @@ ApliArte AI nació de una frustración: todas las extensiones de IA para VS Code
 
 Con transformers.js v4 conseguí que los modelos corran directamente dentro de VS Code — sin instalar LM Studio, sin Ollama, sin nada. Un click y funciona. Tu código nunca sale de tu ordenador.
 
-Si eres desarrollador y valoras tu privacidad, esta herramienta es para vos. Es gratis, es open source, y siempre lo será.
+Si eres desarrollador y valoras tu privacidad, esta herramienta es para ti. Es gratis, es open source, y siempre lo será.
 
 </details>
 
