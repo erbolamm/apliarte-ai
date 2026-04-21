@@ -328,7 +328,7 @@ function applyLang(lang) {
     GUIDE_TEXTS['remote-offline'].sub = 'LM Studio / Ollama — no detectado';
     GUIDE_TEXTS['remote-offline'].guide = '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abre <strong>LM Studio</strong> o <strong>Ollama</strong> y carga un modelo<br>• O cambia el proveedor a <strong>Local</strong> para inferencia sin instalar nada';
     GUIDE_TEXTS['remote-ready'].sub = 'Conectado — puedes escribir tu primer mensaje';
-    GUIDE_TEXTS['agent'].sub = 'Agent Cloud — verificá la conexión en Configuración';
+    GUIDE_TEXTS['agent'].sub = 'Agent Cloud — verifica la conexión en Configuración';
     GUIDE_TEXTS['agent'].guide = '☁️ <strong>Modo Agente.</strong> Configura el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.';
   }
 }
@@ -494,7 +494,7 @@ function renderHfResults(models, error) {
     return;
   }
   if (!models || models.length === 0) {
-    hfResultsEl.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Sin resultados. Probá con otro término.</div>';
+    hfResultsEl.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Sin resultados. Prueba con otro término.</div>';
     return;
   }
   models.forEach(function(m) {
@@ -957,7 +957,7 @@ var GUIDE_TEXTS = {
     guide: '', showBtn: false, showFolderBtn: false,
   },
   'agent': {
-    sub: 'Agent Cloud — verificá la conexión en Configuración',
+    sub: 'Agent Cloud — verifica la conexión en Configuración',
     guide: '☁️ <strong>Modo Agente.</strong> Configura el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.',
     showBtn: false, showFolderBtn: false,
   },

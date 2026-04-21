@@ -1091,7 +1091,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     );
 
     const action = await vscode.window.showInformationMessage(
-      '¿Querés aplicar estos cambios?',
+      '¿Quieres aplicar estos cambios?',
       'Aplicar',
       'Cancelar'
     );
@@ -1287,7 +1287,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       <button id="hf-search-btn"><i class="codicon codicon-search"></i> <span data-i18n="hf_search_btn">Buscar</span></button>
     </div>
     <div id="hf-results">
-      <div id="hf-status" style="padding:20px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Buscá modelos compatibles para inferencia local</div>
+      <div id="hf-status" style="padding:20px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Busca modelos compatibles para inferencia local</div>
     </div>
     <div id="hf-footer" data-i18n="hf_footer">Los modelos se descargan a tu carpeta de modelos configurada · Solo formato ONNX</div>
   </div>

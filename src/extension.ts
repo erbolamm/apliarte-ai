@@ -148,7 +148,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const servers = mgr.list();
       if (servers.length === 0) {
         vscode.window.showInformationMessage(
-          'No hay servidores MCP configurados. Agregá entradas en apliarteAi.mcpServers.'
+          'No hay servidores MCP configurados. Agrega entradas en apliarteAi.mcpServers.'
         );
         return;
       }

@@ -6,11 +6,11 @@
 
 ## ¿Qué es ApliArte AI?
 
-Es una extensión de VS Code que te permite chatear con modelos de IA directamente desde el editor. **Sin pagar APIs, sin mandar tu código a la nube** (a menos que vos lo elijas).
+Es una extensión de VS Code que te permite chatear con modelos de IA directamente desde el editor. **Sin pagar APIs, sin mandar tu código a la nube** (a menos que tú lo elijas).
 
-Tenés tres formas de usarla:
+Tienes tres formas de usarla:
 
-| Modo | ¿Qué necesitás? | ¿Es gratis? | ¿Es privado? |
+| Modo | ¿Qué necesitas? | ¿Es gratis? | ¿Es privado? |
 |------|-----------------|-------------|--------------|
 | **Local** | Nada extra | ✅ 100% | ✅ 100% |
 | **Remote** | LM Studio u Ollama corriendo | ✅ 100% | ✅ 100% |
@@ -20,7 +20,7 @@ Tenés tres formas de usarla:
 
 ## Instalación
 
-1. Abrí VS Code
+1. Abre VS Code
 2. Ir a la pestaña de extensiones (`Ctrl+Shift+X` / `Cmd+Shift+X`)
 3. Buscar **ApliArte AI**
 4. Click en **Instalar**
@@ -30,20 +30,20 @@ Tenés tres formas de usarla:
 
 ## Modo Local — IA que corre en tu máquina sin nada más
 
-El modelo de IA corre **dentro de VS Code** usando tu CPU/GPU. No necesitás LM Studio ni Ollama ni nada extra.
+El modelo de IA corre **dentro de VS Code** usando tu CPU/GPU. No necesitas LM Studio ni Ollama ni nada extra.
 
 ### Cómo activarlo
 
-1. Abrí el chat (ícono de ApliArte en la barra lateral)
+1. Abre el chat (ícono de ApliArte en la barra lateral)
 2. En el panel de configuración (ícono de engranaje ⚙️ dentro del chat), elige **modo Local**
 3. La primera vez que mandés un mensaje, la extensión descarga automáticamente el modelo recomendado (~600 MB)
-4. Esperá la barra de progreso — después de eso, todo funciona offline
+4. Espera la barra de progreso — después de eso, todo funciona offline
 
 ### ¿Qué modelos usa?
 
-Por defecto usa **Qwen2.5-Coder-0.5B** (modelo pequeño, optimizado para código). Podés cambiarlo desde el panel de configuración.
+Por defecto usa **Qwen2.5-Coder-0.5B** (modelo pequeño, optimizado para código). Puedes cambiarlo desde el panel de configuración.
 
-> **Limitación**: Los modelos locales son pequeños. Sirven para tareas concretas (explicar una función, corregir un bug). Para conversaciones largas o proyectos complejos, usá modo Remote o Agent.
+> **Limitación**: Los modelos locales son pequeños. Sirven para tareas concretas (explicar una función, corregir un bug). Para conversaciones largas o proyectos complejos, usa modo Remote o Agent.
 
 ---
 
@@ -61,7 +61,7 @@ Usas un modelo más grande que ya tienes en LM Studio u Ollama. La extensión se
 
 ### Con Ollama
 
-1. Instalá [Ollama](https://ollama.ai)
+1. Instala [Ollama](https://ollama.ai)
 2. En la terminal: `ollama pull llama3.1` (o el modelo que quieras)
 3. Ollama arranca solo al instalarse — en ApliArte → configuración ⚙️ → modo **Remote** → URL: `http://localhost:11434`
 4. Listo
@@ -79,7 +79,7 @@ El modo Agent conecta con un backend en la nube que le da a la IA acceso a tus a
 
 ### Cómo activarlo
 
-1. Necesitás endpoint + API key del backend ApliArte
+1. Necesitas endpoint + API key del backend ApliArte
 2. En configuración ⚙️ → modo **Agent**
 3. Completá `Agent Endpoint` y `Agent API Key`
 
@@ -143,11 +143,11 @@ ApliArte AI guarda tus conversaciones automáticamente. Nunca perdés el histori
 
 MCP (Model Context Protocol) permite conectar herramientas externas que el LLM puede usar durante la conversación. Por ejemplo: memoria persistente, acceso a GitHub, bases de datos, filesystem avanzado.
 
-> **En términos simples**: es como darle superpoderes extra a la IA. Vos configurás qué herramientas tiene disponibles.
+> **En términos simples**: es como darle superpoderes extra a la IA. Tú configuras qué herramientas tiene disponibles.
 
 ### Cómo configurar un servidor MCP
 
-Abrí la configuración de VS Code (`Cmd+,`) y buscá `apliarteAi.mcpServers`.
+Abre la configuración de VS Code (`Cmd+,`) y busca `apliarteAi.mcpServers`.
 
 Hay dos tipos de servidores:
 
@@ -239,7 +239,7 @@ Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones 
 ### Ver el estado de los servidores
 
 - Comando: `ApliArte AI: Estado de servidores MCP` (palette de comandos `Cmd+Shift+P`)
-- O mirá los badges de colores en la toolbar del chat:
+- O mira los badges de colores en la toolbar del chat:
   - 🟢 Verde = conectado y listo
   - 🟡 Amarillo = conectando...
   - 🔴 Rojo = error
@@ -304,21 +304,21 @@ En v0.7 se eliminó el panel específico de Engram. Ahora la IA interactúa con 
 
 ### "No hay modelo cargado"
 - **Modo Remote**: Asegurate de que LM Studio u Ollama esté corriendo y tenga un modelo cargado.
-- **Modo Local**: La primera vez tarda en descargar el modelo (~600 MB). Esperá a que la barra de progreso termine.
+- **Modo Local**: La primera vez tarda en descargar el modelo (~600 MB). Espera a que la barra de progreso termine.
 
 ### El servidor MCP aparece en rojo (error)
-1. Abrí la palette de comandos → `ApliArte AI: Estado de servidores MCP` para ver el detalle del error
+1. Abre la palette de comandos → `ApliArte AI: Estado de servidores MCP` para ver el detalle del error
 2. Verifica que el servidor esté corriendo (para HTTP) o que el comando sea válido (para stdio)
-3. Usá `ApliArte AI: Reiniciar servidor MCP` para intentar reconectar
+3. Usa `ApliArte AI: Reiniciar servidor MCP` para intentar reconectar
 
 ### El modelo no responde / se queda cargando
 - Hay un timeout de 60 segundos para la respuesta y 30 segundos por herramienta
 - Si el modelo es muy lento, puedes subir el timeout en la configuración (próxima versión)
-- Probá con un modelo más pequeño
+- Prueba con un modelo más pequeño
 
 ### No aparecen los badges MCP en el chat
 - Los badges aparecen cuando hay al menos un servidor configurado en `apliarteAi.mcpServers`
-- Si acabás de agregar la configuración, cerrá y volvé a abrir el panel del chat
+- Si acabás de agregar la configuración, cierra y vuelve a abrir el panel del chat
 
 ### La IA no usa las herramientas MCP
 - En modo Remote: el modelo debe soportar function calling (Llama 3.1+, Qwen2.5, Mistral Nemo+)
