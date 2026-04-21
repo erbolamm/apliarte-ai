@@ -245,6 +245,19 @@ Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones 
   - 🔴 Rojo = error
   - ⚪ Gris = detenido
 
+### Servidores verificados
+
+| Servidor | Paquete npm | Para qué sirve |
+|----------|-------------|---------------|
+| Memoria | `@modelcontextprotocol/server-memory` | Contexto persistente entre sesiones |
+| Filesystem | `@modelcontextprotocol/server-filesystem` | Leer y escribir archivos fuera del workspace |
+| GitHub | `@modelcontextprotocol/server-github` | Issues, PRs, búsqueda de código |
+| PostgreSQL | `@modelcontextprotocol/server-postgres` | Consultas SQL |
+| SQLite | `@modelcontextprotocol/server-sqlite` | Bases de datos locales `.sqlite` |
+| Browser | `@playwright/mcp` | Navegar webs, screenshots |
+
+Documentación completa: [docs/mcp.md](docs/mcp.md)
+
 ### Reiniciar un servidor que falla
 
 Comando: `ApliArte AI: Reiniciar servidor MCP` → elige cuál.
