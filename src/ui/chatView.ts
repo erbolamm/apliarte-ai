@@ -312,6 +312,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     await this._sendConnectionStatus();
     this._sendMcpStatus();
     this._sendSettings();
+    this._sendSystemInfo();
+  }
+
+  private _sendSystemInfo(): void {
+    const { totalmem } = require('os') as typeof import('os');
+    const ramGb = Math.round(totalmem() / (1024 ** 3));
+    this._post({ type: 'systemInfo', ramGb });
   }
 
   private _sendMcpStatus(): void {
@@ -1210,6 +1217,43 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
 
+<!-- ── Mode info popup ───────────────────────────────────── -->
+<div id="mode-info-popup">
+  <div class="mode-info-close-row"><button id="mode-info-close">✕</button></div>
+  <div class="mode-card" id="mode-card-local">
+    <div class="mode-card-header"><span class="mode-dot local"></span><strong>Local</strong> <span class="mode-badge">🔒 100% privado</span></div>
+    <p>Un modelo pequeño corre <strong>dentro de VS Code</strong>, directamente en tu CPU/GPU. No necesitas instalar nada más.</p>
+    <ul>
+      <li>✅ Sin internet (después de la primera descarga)</li>
+      <li>✅ Tu código nunca sale de tu máquina</li>
+      <li>⚠️ Los modelos pequeños no soportan herramientas MCP</li>
+      <li>⚠️ Respuestas más lentas y menos detalladas que modelos grandes</li>
+    </ul>
+    <p class="mode-when"><strong>Ideal para:</strong> consultas rápidas, explicar código, correcciones simples.</p>
+  </div>
+  <div class="mode-card" id="mode-card-remote">
+    <div class="mode-card-header"><span class="mode-dot remote"></span><strong>LM Studio / Ollama</strong> <span class="mode-badge">🔒 100% privado</span></div>
+    <p>Conecta con LM Studio u Ollama corriendo en tu máquina. Puedes usar modelos mucho más grandes y capaces.</p>
+    <ul>
+      <li>✅ Tu código nunca sale de tu máquina</li>
+      <li>✅ Modelos grandes con soporte de herramientas MCP</li>
+      <li>🔧 Necesitas LM Studio o Ollama instalado y corriendo</li>
+    </ul>
+    <p class="mode-when"><strong>Ideal para:</strong> uso diario, proyectos complejos, tool-calling con MCP.</p>
+  </div>
+  <div class="mode-card" id="mode-card-agent">
+    <div class="mode-card-header"><span class="mode-dot agent"></span><strong>Agent</strong> <span class="mode-badge">☁️ Requiere backend</span></div>
+    <p>El LLM vive en un servidor remoto (tuyo o de tu equipo). Las herramientas se ejecutan <strong>siempre en tu máquina</strong>.</p>
+    <ul>
+      <li>✅ Modelos potentes en la nube (GPT-4, Claude, Mistral…)</li>
+      <li>✅ Herramientas MCP completas + RAG del workspace</li>
+      <li>🔧 Necesitas un <code>Agent Endpoint</code> y una <code>API Key</code></li>
+      <li>⚠️ Tu conversación viaja al servidor remoto</li>
+    </ul>
+    <p class="mode-when"><strong>Ideal para:</strong> equipos, proyectos grandes, máximo contexto y capacidad.</p>
+  </div>
+</div>
+
 <!-- ── Toolbar ──────────────────────────────────────────── -->
 <div id="toolbar">
   <button class="tb" id="sidebar-toggle" title="Conversaciones"><i class="codicon codicon-layout-sidebar-left"></i></button>
@@ -1219,6 +1263,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     <option value="local" data-i18n="provider_local">Local</option>
     <option value="agent" data-i18n="provider_agent">Agent</option>
   </select>
+  <button class="tb" id="mode-info-btn" title="¿Qué modo elegir?">?</button>
   <select id="model-select" title="Modelo"><option value="">cargando…</option></select>
   <button class="tb" id="folder-btn" style="display:none" title="Carpeta de modelos" onclick="vscode.postMessage({type:'chooseModelsDir'})"><i class="codicon codicon-folder-opened"></i></button>
   <span id="tps-badge" style="display:none"></span>
@@ -1320,17 +1365,32 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 <div id="hf-overlay">
   <div id="hf-panel">
     <div id="hf-header">
-      <h3><i class="codicon codicon-cloud-download"></i> <span data-i18n="hf_title">Buscar modelos ONNX</span></h3>
+      <h3><i class="codicon codicon-cloud-download"></i> Modelos de IA</h3>
       <button id="hf-close">✕</button>
     </div>
-    <div id="hf-search-row">
-      <input type="text" id="hf-search-input" data-i18n-placeholder="hf_search_ph" placeholder="Ej: Qwen, SmolLM, phi…">
-      <button id="hf-search-btn"><i class="codicon codicon-search"></i> <span data-i18n="hf_search_btn">Buscar</span></button>
+    <div id="hf-tabs">
+      <button class="hf-tab active" data-tab="recommended">⭐ Recomendados para mi equipo</button>
+      <button class="hf-tab" data-tab="search">🔍 Buscar en HuggingFace</button>
     </div>
-    <div id="hf-results">
-      <div id="hf-status" style="padding:20px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Busca modelos compatibles para inferencia local</div>
+
+    <!-- Tab: recomendados -->
+    <div id="hf-tab-recommended" class="hf-tab-panel">
+      <div id="hf-ram-badge"></div>
+      <div id="hf-recommended-list"></div>
     </div>
-    <div id="hf-footer" data-i18n="hf_footer">Los modelos se descargan a tu carpeta de modelos configurada · Solo formato ONNX</div>
+
+    <!-- Tab: búsqueda libre -->
+    <div id="hf-tab-search" class="hf-tab-panel" style="display:none">
+      <div id="hf-search-row">
+        <input type="text" id="hf-search-input" placeholder="Ej: Qwen, SmolLM, phi…">
+        <button id="hf-search-btn"><i class="codicon codicon-search"></i> Buscar</button>
+      </div>
+      <div id="hf-results">
+        <div id="hf-status" style="padding:20px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Busca modelos compatibles para inferencia local</div>
+      </div>
+    </div><!-- /hf-tab-search -->
+
+    <div id="hf-footer">Los modelos se descargan a tu carpeta configurada · Formato ONNX (modo Local)</div>
   </div>
 </div>
 

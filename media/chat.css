@@ -506,3 +506,80 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
   border:none;border-radius:3px;cursor:pointer;font-size:10px;padding:2px 5px;
 }
 .copy-prompt-btn:hover{filter:brightness(1.2);}
+
+/* ── Mode info popup ──────────────────────────────────────────── */
+#mode-info-btn{font-size:11px;font-weight:700;padding:0 6px;opacity:.6;}
+#mode-info-btn:hover{opacity:1;}
+#mode-info-popup{
+  display:none;position:fixed;top:44px;left:4px;right:4px;
+  background:var(--vscode-editorWidget-background,#252526);
+  border:1px solid var(--vscode-panel-border);border-radius:8px;
+  z-index:200;padding:12px;max-height:calc(100vh - 60px);overflow-y:auto;
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+}
+#mode-info-popup.open{display:block;}
+.mode-info-close-row{display:flex;justify-content:flex-end;margin-bottom:4px;}
+#mode-info-close{background:none;border:none;color:inherit;opacity:.5;cursor:pointer;font-size:14px;padding:0 2px;}
+#mode-info-close:hover{opacity:1;}
+.mode-card{
+  background:var(--vscode-editor-background);border:1px solid var(--vscode-panel-border);
+  border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.5;
+}
+.mode-card.mode-card-active{border-color:var(--vscode-focusBorder,#4fc3f7);}
+.mode-card-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.mode-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.mode-dot.local{background:#4fc3f7;}
+.mode-dot.remote{background:#81c784;}
+.mode-dot.agent{background:#ce93d8;}
+.mode-badge{font-size:10px;opacity:.7;background:var(--vscode-badge-background);
+  padding:1px 6px;border-radius:10px;}
+.mode-card p{margin:4px 0;}
+.mode-card ul{margin:4px 0 4px 16px;padding:0;}
+.mode-card li{margin-bottom:2px;}
+.mode-when{opacity:.75;font-style:italic;margin-top:6px!important;}
+.mode-card code{font-family:var(--vscode-editor-font-family);font-size:11px;
+  background:var(--vscode-textBlockQuote-background);padding:1px 4px;border-radius:3px;}
+
+/* ── HF tabs ──────────────────────────────────────────────────── */
+#hf-tabs{display:flex;gap:4px;padding:0 12px 10px;border-bottom:1px solid var(--vscode-panel-border);margin-bottom:10px;}
+.hf-tab{
+  background:none;border:1px solid var(--vscode-panel-border);border-radius:5px;
+  color:var(--vscode-foreground);cursor:pointer;font-size:11px;padding:5px 10px;opacity:.65;
+}
+.hf-tab.active{opacity:1;background:var(--vscode-button-secondaryBackground);border-color:var(--vscode-focusBorder,#4fc3f7);}
+.hf-tab:hover:not(.active){opacity:.9;}
+#hf-tab-recommended{padding:0 12px 8px;}
+#hf-tab-search{padding:0 12px 8px;}
+
+/* ── RAM badge ────────────────────────────────────────────────── */
+.ram-detected{
+  display:inline-block;font-size:11px;padding:4px 10px;border-radius:5px;margin-bottom:10px;
+  background:var(--vscode-badge-background);opacity:.85;
+}
+.ram-unknown{opacity:.55;}
+
+/* ── Recommended model cards ──────────────────────────────────── */
+.rec-section-title{font-size:11px;font-weight:600;opacity:.5;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px;}
+.rec-section-subtitle{font-size:10px;opacity:.4;margin:8px 0 4px;font-style:italic;}
+.rec-model-card{
+  border:1px solid var(--vscode-panel-border);border-radius:6px;
+  padding:8px 10px;margin-bottom:6px;background:var(--vscode-editor-background);
+}
+.rec-model-card.dimmed{opacity:.4;}
+.rec-model-header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;}
+.rec-model-name{font-size:12px;font-weight:600;}
+.model-tool-badge{
+  font-size:10px;padding:1px 6px;border-radius:10px;
+  background:rgba(129,199,132,.15);color:#81c784;border:1px solid rgba(129,199,132,.3);
+}
+.model-no-tool-badge{
+  font-size:10px;padding:1px 6px;border-radius:10px;
+  background:rgba(255,255,255,.05);opacity:.5;border:1px solid var(--vscode-panel-border);
+}
+.model-ram-tag{font-size:10px;opacity:.6;margin-left:auto;}
+.rec-model-desc{font-size:11px;opacity:.75;line-height:1.4;margin-bottom:6px;}
+.rec-model-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rec-model-cmd{font-size:10px;font-family:var(--vscode-editor-font-family);
+  background:var(--vscode-textBlockQuote-background);padding:2px 6px;border-radius:3px;opacity:.8;}
+.hf-dl-copy{background:var(--vscode-button-secondaryBackground)!important;
+  color:var(--vscode-button-secondaryForeground)!important;}

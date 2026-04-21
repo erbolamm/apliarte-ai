@@ -37,6 +37,10 @@ var hfClose       = document.getElementById('hf-close');
 var hfSearchInput = document.getElementById('hf-search-input');
 var hfSearchBtn   = document.getElementById('hf-search-btn');
 var hfResultsEl   = document.getElementById('hf-results');
+var modeInfoBtn   = document.getElementById('mode-info-btn');
+var modeInfoPopup = document.getElementById('mode-info-popup');
+var modeInfoClose = document.getElementById('mode-info-close');
+var systemRamGb   = 0;
 var mcpBadgesEl     = document.getElementById('mcp-badges');
 var mcpPanelEl      = document.getElementById('mcp-panel');
 var mcpServers      = [];
@@ -416,6 +420,29 @@ function applyMcpStack(stack) {
   });
 }
 
+/* ── Mode info popup ────────────────────────────────────────── */
+if (modeInfoBtn) modeInfoBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  modeInfoPopup.classList.toggle('open');
+  if (modeInfoPopup.classList.contains('open')) highlightCurrentModeCard();
+});
+if (modeInfoClose) modeInfoClose.addEventListener('click', function() {
+  modeInfoPopup.classList.remove('open');
+});
+document.addEventListener('click', function(e) {
+  if (modeInfoPopup && modeInfoPopup.classList.contains('open') &&
+      !modeInfoPopup.contains(e.target) && e.target !== modeInfoBtn) {
+    modeInfoPopup.classList.remove('open');
+  }
+});
+
+function highlightCurrentModeCard() {
+  ['local','remote','agent'].forEach(function(m) {
+    var card = document.getElementById('mode-card-' + m);
+    if (card) card.classList.toggle('mode-card-active', currentProvider === m);
+  });
+}
+
 /* ── HF Hub browser ────────────────────────────────────────── */
 document.getElementById('hf-btn').addEventListener('click', function() { openHfBrowser(); });
 hfClose.addEventListener('click', function() { hfOverlay.classList.remove('open'); });
@@ -425,6 +452,17 @@ hfOverlay.addEventListener('click', function(e) {
 hfSearchBtn.addEventListener('click', function() { searchHf(); });
 hfSearchInput.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') searchHf();
+});
+
+/* ── HF tabs ────────────────────────────────────────────────── */
+document.querySelectorAll('.hf-tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.hf-tab').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.hf-tab-panel').forEach(function(p) { p.style.display = 'none'; });
+    btn.classList.add('active');
+    var panel = document.getElementById('hf-tab-' + btn.dataset.tab);
+    if (panel) panel.style.display = 'block';
+  });
 });
 
 /* ── Folder button visibility ───────────────────────────────── */
@@ -475,10 +513,182 @@ function dismissSlowBanner() {
 
 function openHfBrowser() {
   hfOverlay.classList.add('open');
-  hfSearchInput.focus();
-  if (hfResultsEl.children.length <= 1) {
-    searchHf();
+  renderRecommendedModels(systemRamGb);
+}
+
+/* ── Curated model catalogue ────────────────────────────────── */
+var RECOMMENDED_MODELS = [
+  // ── Local (ONNX — modo Local sin nada más) ──────────────────
+  {
+    id: 'onnx-community/Qwen2.5-Coder-0.5B-Instruct',
+    label: 'Qwen2.5-Coder 0.5B',
+    mode: 'local',
+    ramGb: 2,
+    toolCalling: false,
+    badge: '⚡ Rápido · Código',
+    desc: 'Modelo ultra-ligero para explicar y corregir código. Perfecto para ordenadores con poca RAM.'
+  },
+  {
+    id: 'onnx-community/Qwen2.5-Coder-1.5B-Instruct',
+    label: 'Qwen2.5-Coder 1.5B',
+    mode: 'local',
+    ramGb: 3,
+    toolCalling: false,
+    badge: '⚡ Rápido · Código',
+    desc: 'Más capaz que el 0.5B manteniendo buen rendimiento en hardware modesto.'
+  },
+  {
+    id: 'onnx-community/Qwen2.5-Coder-7B-Instruct',
+    label: 'Qwen2.5-Coder 7B',
+    mode: 'local',
+    ramGb: 8,
+    toolCalling: true,
+    badge: '🔧 Herramientas · Código',
+    desc: 'El mejor modelo de código local. Soporta tool-calling (MCP). Necesitas 8 GB de RAM libre.'
+  },
+  {
+    id: 'onnx-community/Llama-3.2-3B-Instruct',
+    label: 'Llama 3.2 3B',
+    mode: 'local',
+    ramGb: 4,
+    toolCalling: true,
+    badge: '🔧 Herramientas · General',
+    desc: 'Buen equilibrio entre tamaño y capacidad. Soporta herramientas MCP básicas.'
+  },
+  {
+    id: 'onnx-community/SmolLM2-1.7B-Instruct',
+    label: 'SmolLM2 1.7B',
+    mode: 'local',
+    ramGb: 3,
+    toolCalling: false,
+    badge: '⚡ Rápido · General',
+    desc: 'Modelo pequeño y rápido para uso general. No soporta herramientas.'
+  },
+  // ── Remote (Ollama / LM Studio — modo Remote) ───────────────
+  {
+    id: 'ollama:qwen2.5-coder:7b',
+    label: 'Qwen2.5-Coder 7B (Ollama)',
+    mode: 'remote',
+    ramGb: 8,
+    toolCalling: true,
+    badge: '🔧 Herramientas · Código',
+    desc: 'El mejor modelo de código para Ollama. Soporta tool-calling completo con MCP.',
+    ollamaCmd: 'ollama pull qwen2.5-coder:7b'
+  },
+  {
+    id: 'ollama:llama3.1:8b',
+    label: 'Llama 3.1 8B (Ollama)',
+    mode: 'remote',
+    ramGb: 8,
+    toolCalling: true,
+    badge: '🔧 Herramientas · General',
+    desc: 'Gran modelo de uso general con soporte completo de herramientas.',
+    ollamaCmd: 'ollama pull llama3.1:8b'
+  },
+  {
+    id: 'ollama:mistral:7b',
+    label: 'Mistral 7B (Ollama)',
+    mode: 'remote',
+    ramGb: 8,
+    toolCalling: true,
+    badge: '🔧 Herramientas · General',
+    desc: 'Rápido y capaz. Buena alternativa a Llama para uso general.',
+    ollamaCmd: 'ollama pull mistral:7b'
+  },
+  {
+    id: 'ollama:deepseek-coder-v2:16b',
+    label: 'DeepSeek Coder V2 16B (Ollama)',
+    mode: 'remote',
+    ramGb: 16,
+    toolCalling: true,
+    badge: '🔧 Herramientas · Código avanzado',
+    desc: 'Uno de los mejores modelos de código disponibles. Necesitas 16 GB de RAM.',
+    ollamaCmd: 'ollama pull deepseek-coder-v2:16b'
+  },
+  {
+    id: 'ollama:phi3:3.8b',
+    label: 'Phi-3 3.8B (Ollama)',
+    mode: 'remote',
+    ramGb: 5,
+    toolCalling: false,
+    badge: '⚡ Ligero · General',
+    desc: 'Modelo de Microsoft, sorprendentemente capaz para su tamaño.',
+    ollamaCmd: 'ollama pull phi3:3.8b'
+  },
+];
+
+function renderRecommendedModels(ramGb) {
+  var container = document.getElementById('hf-recommended-list');
+  var ramBadge   = document.getElementById('hf-ram-badge');
+  if (!container) return;
+
+  var detectedRam = ramGb > 0 ? ramGb : null;
+  if (ramBadge) {
+    ramBadge.innerHTML = detectedRam
+      ? '<span class="ram-detected">💻 RAM detectada: <strong>' + detectedRam + ' GB</strong> — mostrando modelos compatibles</span>'
+      : '<span class="ram-detected ram-unknown">💻 RAM no detectada — mostrando todos los modelos</span>';
   }
+
+  // Separate sections
+  var localModels  = RECOMMENDED_MODELS.filter(function(m) { return m.mode === 'local'; });
+  var remoteModels = RECOMMENDED_MODELS.filter(function(m) { return m.mode === 'remote'; });
+
+  function fits(m) {
+    if (!detectedRam) return true;
+    return m.ramGb <= detectedRam;
+  }
+
+  function renderSection(title, models) {
+    var available = models.filter(fits);
+    var unavailable = models.filter(function(m) { return !fits(m); });
+    var html = '<div class="rec-section-title">' + title + '</div>';
+    if (available.length === 0 && unavailable.length === 0) {
+      html += '<p style="font-size:12px;opacity:.5;padding:8px">No hay modelos en esta categoría.</p>';
+      return html;
+    }
+    available.forEach(function(m) { html += renderModelCard(m, false); });
+    if (unavailable.length > 0) {
+      html += '<div class="rec-section-subtitle">Necesitas más RAM:</div>';
+      unavailable.forEach(function(m) { html += renderModelCard(m, true); });
+    }
+    return html;
+  }
+
+  function renderModelCard(m, dimmed) {
+    var toolBadge = m.toolCalling
+      ? '<span class="model-tool-badge">🔧 Herramientas MCP</span>'
+      : '<span class="model-no-tool-badge">Sin herramientas</span>';
+    var ramTag = '<span class="model-ram-tag">~' + m.ramGb + ' GB RAM</span>';
+    var dlBtn = '';
+    if (m.mode === 'local') {
+      dlBtn = '<button class="hf-dl-btn" onclick="downloadHfModel(\'' + m.id.replace(/'/g, '') + '\',this)">⬇ Descargar</button>';
+    } else if (m.ollamaCmd) {
+      dlBtn = '<button class="hf-dl-btn hf-dl-copy" onclick="copyOllamaCmd(\'' + m.ollamaCmd.replace(/'/g, '') + '\',this)">📋 Copiar comando</button>';
+    }
+    return '<div class="rec-model-card' + (dimmed ? ' dimmed' : '') + '">' +
+      '<div class="rec-model-header">' +
+        '<span class="rec-model-name">' + esc(m.label) + '</span>' +
+        toolBadge + ramTag +
+      '</div>' +
+      '<div class="rec-model-desc">' + esc(m.desc) + '</div>' +
+      '<div class="rec-model-footer">' +
+        (m.ollamaCmd ? '<code class="rec-model-cmd">' + esc(m.ollamaCmd) + '</code>' : '') +
+        dlBtn +
+      '</div>' +
+    '</div>';
+  }
+
+  container.innerHTML =
+    renderSection('🖥️ Modo Local — corre dentro de VS Code (ONNX)', localModels) +
+    renderSection('⚡ Modo Remote — LM Studio / Ollama en tu máquina', remoteModels);
+}
+
+function copyOllamaCmd(cmd, btn) {
+  navigator.clipboard.writeText(cmd).then(function() {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copiado';
+    setTimeout(function() { btn.innerHTML = orig; }, 2000);
+  });
 }
 
 function searchHf() {
@@ -1225,6 +1435,10 @@ window.addEventListener('message', function(event) {
 
     case 'hfResults':
       renderHfResults(d.models, d.error);
+      break;
+
+    case 'systemInfo':
+      systemRamGb = d.ramGb || 0;
       break;
 
     case 'inferenceStats':
