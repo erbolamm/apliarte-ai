@@ -909,6 +909,10 @@ mSel.addEventListener('change', function() {
     var modelId = val.substring(9);
     vscode.postMessage({ type: 'downloadModel', model: modelId });
     if (mSel.dataset.prev) mSel.value = mSel.dataset.prev;
+  } else if (val.startsWith('gguf:')) {
+    var ggufPath = val.substring(5);
+    vscode.postMessage({ type: 'loadGgufModel', path: ggufPath });
+    if (mSel.dataset.prev) mSel.value = mSel.dataset.prev;
   } else {
     mSel.dataset.prev = val;
     vscode.postMessage({ type: 'setModel', model: val });
@@ -1131,11 +1135,14 @@ window.addEventListener('message', function(event) {
         }
         if (d.ggufModels && d.ggufModels.length > 0) {
           var ggufSep = document.createElement('option'); ggufSep.disabled = true;
-          ggufSep.textContent = '── En tu carpeta (GGUF · usa vía LM Studio) ──'; mSel.appendChild(ggufSep);
-          d.ggufModels.forEach(function(id) {
+          ggufSep.textContent = '── En tu carpeta (GGUF · nativo) ──'; mSel.appendChild(ggufSep);
+          d.ggufModels.forEach(function(m) {
             var opt = document.createElement('option');
-            opt.value = ''; opt.disabled = true;
-            opt.textContent = '🟠 ' + id.split('/').pop();
+            var absPath = m.localPath || m.id;
+            var isLoaded = d.loadedGguf && d.loadedGguf.startsWith(absPath);
+            opt.value = 'gguf:' + absPath;
+            opt.textContent = (isLoaded ? '🟢 ' : '🟠 ') + (m.id ? m.id.split('/').pop() : m.id);
+            if (isLoaded) { opt.selected = true; }
             mSel.appendChild(opt);
           });
         }

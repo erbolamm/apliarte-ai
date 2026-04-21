@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { join } from 'path';
 import { logger } from './utils/logger';
 import { detectProviders } from './core/detector';
 import { setupContinue } from './core/setup';
@@ -8,6 +9,7 @@ import { WorkspaceTreeProvider } from './ui/workspaceView';
 import { QUICK_ACTIONS, executeQuickAction } from './ui/quickActions';
 import { showModelRecommendations } from './core/modelRecommender';
 import { setDepsDirectory, setModelsDirectory, scanModelsDir } from './core/localInference';
+import { setGgufDepsDirectory } from './core/ggufInference';
 import { indexWorkspace } from './core/agentService';
 import { collectWorkspaceFiles } from './tools/executor';
 import { McpServerManager } from './mcp/serverManager';
@@ -23,6 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // ── Local inference deps + models directory ────────────
   setDepsDirectory(context.globalStorageUri.fsPath);
+  setGgufDepsDirectory(join(context.globalStorageUri.fsPath, 'deps-gguf'));
 
   const syncModelsDir = (): void => {
     const dir = vscode.workspace.getConfiguration('apliarteAi').get<string>('modelsDir', '').trim();

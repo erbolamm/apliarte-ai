@@ -214,7 +214,7 @@ const REMOTE_CANDIDATES = [
 
 **Archivos a modificar**: `src/core/llmService.ts`, `src/ui/chatView.ts`
 
-#### Feature 5 — GGUF nativo con node-llama-cpp (PENDIENTE)
+#### Feature 5 — GGUF nativo con node-llama-cpp ✅ COMPLETO
 
 Permite cargar modelos `.gguf` directamente, sin LM Studio ni Ollama. Complementa el modo Local actual (que solo soporta ONNX via transformers.js).
 

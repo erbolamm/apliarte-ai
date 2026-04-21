@@ -23,6 +23,14 @@ import {
   scanOllamaModels,
 } from '../core/localInference';
 import {
+  areGgufDepsInstalled,
+  installGgufDeps,
+  loadGgufModel,
+  getLoadedGgufModel,
+  streamChatGguf,
+  unloadGgufModel,
+} from '../core/ggufInference';
+import {
   streamAgentChat,
   continueAfterToolCall,
   checkAgentConnection,
@@ -43,6 +51,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private _contextText?: string;
   private _contextName?: string;
   private _provider: 'remote' | 'local' | 'agent' = 'remote';
+  private _ggufModelPath?: string;
   private _remoteEndpoint?: string;
   private _globalState: vscode.Memento;
   private _store: ConversationStore;
@@ -160,7 +169,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           break;
         case 'unloadModel':
           await unloadModel();
+          await unloadGgufModel();
+          this._ggufModelPath = undefined;
           this._post({ type: 'modelUnloaded' });
+          break;
+        case 'loadGgufModel':
+          await this._loadGgufModelHandler(data.path as string);
           break;
 
         // ── Settings ──────────────────────────────────────────────────────
@@ -548,7 +562,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           fullResponse += hint;
           this._post({ type: 'responseChunk', text: hint });
         }
-        await streamChatLocal(messages, (chunk: string) => {
+        const streamFn = this._ggufModelPath ? streamChatGguf : streamChatLocal;
+        await streamFn(messages, (chunk: string) => {
           fullResponse += chunk;
           this._post({ type: 'responseChunk', text: chunk });
         }, {
@@ -794,20 +809,24 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       const scannedOnnx = scanned
         .filter((m) => m.type === 'onnx' && !catalogIds.has(m.id))
         .map((m) => m.id);
-      const scannedGguf = scanned
-        .filter((m) => m.type === 'gguf')
-        .map((m) => m.id);
+      const scannedGgufRaw = scanned.filter((m) => m.type === 'gguf');
+      const scannedGguf = scannedGgufRaw.map((m) => ({
+        id: m.id,
+        localPath: m.localPath,
+      }));
       const ollamaModels = scanOllamaModels().map((m) => m.id);
+      const loadedGguf = getLoadedGgufModel();
 
       this._post({
         type: 'modelsLoaded',
         models: allModels.map((m) => m.id),
-        selected: this._currentModel ?? '',
+        selected: this._ggufModelPath ? (loadedGguf ?? '') : (this._currentModel ?? ''),
         localCatalog: AVAILABLE_MODELS,
         scannedModels: scannedOnnx,
         ggufModels: scannedGguf,
         ollamaModels,
         loadedModel: loaded,
+        loadedGguf: loadedGguf,
         needsModelsDir: !modelsDir,
         modelsDir,
       });
@@ -920,7 +939,29 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     return this._remoteEndpoint;
   }
 
-  /**
+  private async _loadGgufModelHandler(filePath: string): Promise<void> {
+    if (!filePath) return;
+    this._post({ type: 'downloadStart', model: filePath });
+    try {
+      if (!areGgufDepsInstalled()) {
+        this._post({ type: 'downloadProgress', status: 'progress', model: filePath, progress: 0, file: 'Instalando node-llama-cpp…' });
+        await installGgufDeps((msg) => {
+          this._post({ type: 'downloadProgress', status: 'progress', model: filePath, progress: 0, file: msg });
+        });
+      }
+      await loadGgufModel(filePath, (pct) => {
+        this._post({ type: 'downloadProgress', status: 'progress', model: filePath, progress: pct, file: 'Cargando modelo…' });
+      });
+      this._ggufModelPath = filePath;
+      this._currentModel = filePath.split('/').pop() ?? filePath;
+      this._post({ type: 'downloadComplete', model: filePath });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this._post({ type: 'downloadError', text: msg, model: filePath });
+    }
+  }
+
+   /**
    * Descarga (o carga desde caché) un modelo local.
    * Esta función es la ÚNICA propietaria del ciclo downloadStart → Progress → Complete/Error.
    * Las deps se instalan aquí dentro, con progreso embebido en la misma barra.
