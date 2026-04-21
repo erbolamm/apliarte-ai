@@ -87,8 +87,8 @@ export class McpServerManager {
       entry.transport = this._buildTransport(name, config);
       entry.client = new JsonRpcClient(entry.transport, { label: name });
 
-      if (entry.transport instanceof StdioTransport) {
-        await entry.transport.start();
+      if (config.transport === 'stdio' && 'start' in entry.transport) {
+        await (entry.transport as { start(): Promise<void> }).start();
       }
 
       const init = await entry.client.request<InitializeResult>('initialize', {
@@ -181,7 +181,7 @@ export class McpServerManager {
 
   // ── Internals ──────────────────────────────────────────────────────────────
 
-  private _buildTransport(name: string, config: McpServerConfig): McpTransport {
+  protected _buildTransport(name: string, config: McpServerConfig): McpTransport {
     switch (config.transport) {
       case 'stdio':
         return new StdioTransport(config, `mcp:${name}`);
