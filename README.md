@@ -59,16 +59,8 @@ La mayoría de extensiones de IA para VS Code requieren una API key de pago o en
 - Corre modelos ONNX directamente en VS Code usando [transformers.js v4](https://github.com/huggingface/transformers.js)
 - No necesitas instalar nada externo — las dependencias se descargan automáticamente la primera vez
 - **Carpeta de modelos configurable**: apunta a un disco externo, tarjeta SD o cualquier ruta con `apliarteAi.modelsDir`
-- **HF Hub browser**: busca y descarga cualquier modelo ONNX de HuggingFace directo desde VS Code
-- Catálogo de modelos preconfigurados y verificados:
-
-| Modelo | Tamaño | Uso recomendado |
-|--------|--------|-----------------|
-| Qwen 2.5 Coder 3B | ~2 GB | Mejor calidad para código |
-| Qwen 2.5 1.5B | ~1 GB | Buen balance velocidad/calidad |
-| Qwen 2.5 0.5B | ~350 MB | Ultra-rápido, respuestas instantáneas |
-| SmolLM2 360M | ~250 MB | Mínimo consumo de recursos |
-
+- **Recomendador de modelos por hardware**: detecta tu RAM automáticamente y muestra solo los modelos que entran en tu equipo, con indicador de soporte de herramientas MCP (🔧) y RAM requerida
+- **HF Hub browser**: búsqueda libre en HuggingFace para usuarios avanzados
 - Barra de progreso durante la descarga del modelo
 
 ### Conexión con LM Studio / Ollama (modo Remoto)
