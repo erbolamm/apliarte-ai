@@ -343,7 +343,7 @@
     "build": "node esbuild.js --production",
     "watch": "node esbuild.js --watch",
     "lint": "tsc --noEmit",
-    "test": "node --import tsx --test test/**/*.test.ts",
+    "test": "TSX_TSCONFIG_PATH=tsconfig.test.json node --import tsx --test test/**/*.test.ts",
     "package": "vsce package"
   },
   "devDependencies": {
@@ -351,6 +351,7 @@
     "@types/vscode": "^1.93.0",
     "@vscode/codicons": "^0.0.45",
     "esbuild": "^0.21.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.5.0"
   }
 }
