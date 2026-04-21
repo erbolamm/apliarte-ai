@@ -510,7 +510,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           return;
         }
       } else {
-        this._post({ type: 'responseError', text: 'No hay modelo cargado. Abrí LM Studio u Ollama, cargá un modelo, y volvé a intentar.' });
+        this._post({ type: 'responseError', text: 'No hay modelo cargado. Abre LM Studio u Ollama, carga un modelo e inténtalo de nuevo.' });
         return;
       }
     }
@@ -1070,7 +1070,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private async _applyDiff(code: string): Promise<void> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showWarningMessage('No hay editor activo. Abrí el archivo donde querés aplicar el cambio.');
+      vscode.window.showWarningMessage('No hay editor activo. Abre el archivo donde quieres aplicar el cambio.');
       return;
     }
 
@@ -1231,7 +1231,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         </div>
         <div id="welcome-folder-btn" style="display:none;margin-bottom:12px;">
           <button onclick="vscode.postMessage({type:'chooseModelsDir'})" style="background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:8px;padding:11px 22px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin:0 auto;"><i class="codicon codicon-folder-opened"></i> <span data-i18n="welcome_choose_folder">Elegir carpeta de modelos</span></button>
-          <p style="margin-top:8px;font-size:11px;opacity:.55;" data-i18n="welcome_folder_hint">Apuntá a donde tenés tus modelos descargados (disco externo, tarjeta SD, etc.)</p>
+          <p style="margin-top:8px;font-size:11px;opacity:.55;" data-i18n="welcome_folder_hint">Apunta a donde tienes tus modelos descargados (disco externo, tarjeta SD, etc.)</p>
         </div>
         <div id="models-dir-badge" style="display:none;margin-bottom:10px;font-size:10px;opacity:.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;" title="Carpeta de modelos activa"></div>
         <div class="qa">
@@ -1332,7 +1332,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       </div>
       <div class="settings-section">
         <div class="settings-section-title" data-i18n="s_models_dir_title">📁 Carpeta de modelos</div>
-        <p class="settings-hint" style="margin-bottom:8px;" data-i18n="s_models_dir_desc">Elegí dónde guardás tus modelos de IA. Puede ser un disco externo, una tarjeta SD o cualquier carpeta. Yo los busco ahí automáticamente.</p>
+        <p class="settings-hint" style="margin-bottom:8px;" data-i18n="s_models_dir_desc">Elige dónde guardas tus modelos de IA. Puede ser un disco externo, una tarjeta SD o cualquier carpeta. Los buscará ahí automáticamente.</p>
         <div id="models-dir-card">
           <div class="dir-path empty" id="models-dir-display" data-i18n="s_models_dir_none">Sin carpeta configurada (usa almacenamiento por defecto)</div>
           <input type="hidden" id="s-modelsdir">
@@ -1340,7 +1340,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             <i class="codicon codicon-folder-opened"></i> <span data-i18n="s_choose_dir_big">Cambiar carpeta de modelos</span>
           </button>
           <div id="move-models-helper">
-            <p data-i18n="s_move_models_info">¿Tenés modelos en otro lugar? Dale este prompt al Agente para que los mueva:</p>
+            <p data-i18n="s_move_models_info">¿Tienes modelos en otro lugar? Da este prompt al Agente para que los mueva:</p>
             <div class="move-prompt-wrap">
               <textarea id="move-prompt-text" readonly></textarea>
               <button class="copy-prompt-btn" onclick="copyMovePrompt()" data-i18n="s_copy">Copiar</button>
@@ -1358,12 +1358,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             <button class="info-btn" onclick="toggleAgentInfo()" title="¿Cómo creo mi propio servidor?">ℹ</button>
           </div>
           <div id="agent-info-box" class="info-box" style="display:none;">
-            <p data-i18n="agent_info_1">Necesitás tu propio servidor para usar el modo Agente. Es el backend que habla con el LLM en la nube por vos.</p>
+            <p data-i18n="agent_info_1">Necesitas tu propio servidor para usar el modo Agente. Es el backend que habla con el LLM en la nube por ti.</p>
             <p data-i18n="agent_info_2">La forma más fácil es desplegarlo en Hostinger (VPS desde €4/mes):</p>
             <button class="host-btn" onclick="openUrl('https://www.hostinger.com/es?REFERRALCODE=APLIARTE')">
               🚀 <span data-i18n="agent_hostinger">Abrir Hostinger (descuento incluido)</span>
             </button>
-            <p style="margin-top:8px;" data-i18n="agent_info_3">O seguí la guía del repositorio para instalar el backend en cualquier servidor.</p>
+            <p style="margin-top:8px;" data-i18n="agent_info_3">O sigue la guía del repositorio para instalar el backend en cualquier servidor.</p>
           </div>
         </div>
         <div class="settings-field">
@@ -1375,7 +1375,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
       <div class="settings-section">
         <div class="settings-section-title" data-i18n="s_mcp_local_title">🔌 Agregar herramienta MCP local</div>
-        <p class="settings-hint" style="margin-bottom:8px;" data-i18n="s_mcp_local_desc">Conectá servidores MCP que corren en tu máquina — sin internet, 100% privado.</p>
+        <p class="settings-hint" style="margin-bottom:8px;" data-i18n="s_mcp_local_desc">Conecta servidores MCP que corren en tu máquina — sin internet, 100% privado.</p>
         <div style="display:flex;flex-direction:column;gap:6px;">
           <button class="mcp-preset-btn" onclick="addMcpPreset('memory')">
             <span class="preset-icon">🧠</span>

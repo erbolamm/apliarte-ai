@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const label = currentModelsDir || context.globalStorageUri.fsPath;
     const title = isFirstRun
-      ? `ApliArte AI v${currentVersion} instalado — ¿Dónde guardás tus modelos de IA?`
+      ? `ApliArte AI v${currentVersion} instalado — ¿Dónde guardas tus modelos de IA?`
       : `ApliArte AI actualizado a v${currentVersion} — ¿Sigue siendo esta tu carpeta de modelos?`;
 
     void vscode.window.showInformationMessage(

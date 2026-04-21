@@ -197,7 +197,7 @@ var I18N = {
     welcome_title: 'ApliArte AI Chat',
     welcome_sub: '100% local · 0 coste · Tus datos, tu máquina',
     welcome_choose_folder: 'Elegir carpeta de modelos',
-    welcome_folder_hint: 'Apuntá a donde tenés tus modelos descargados (disco externo, tarjeta SD, etc.)',
+    welcome_folder_hint: 'Apunta a donde tienes tus modelos descargados (disco externo, tarjeta SD, etc.)',
     dl_recommended: 'Descargar modelo recomendado (~350MB)',
     dl_once: 'Solo la primera vez. Se guarda localmente.',
     qa_file: 'Enviar archivo',
@@ -210,22 +210,22 @@ var I18N = {
     s_lmstudio: 'Endpoint LM Studio',
     s_ollama: 'Endpoint Ollama',
     s_models_dir_title: '📁 Carpeta de modelos',
-    s_models_dir_desc: 'Elegí dónde guardás tus modelos de IA. Puede ser un disco externo, una tarjeta SD o cualquier carpeta. Yo los busco ahí automáticamente.',
+    s_models_dir_desc: 'Elige dónde guardas tus modelos de IA. Puede ser un disco externo, una tarjeta SD o cualquier carpeta. Los buscará ahí automáticamente.',
     s_models_dir_none: 'Sin carpeta configurada (usa almacenamiento por defecto)',
     s_choose_dir_big: 'Cambiar carpeta de modelos',
-    s_move_models_info: '¿Tenés modelos en otro lugar? Dale este prompt al Agente para que los mueva:',
+    s_move_models_info: '¿Tienes modelos en otro lugar? Da este prompt al Agente para que los mueva:',
     s_copy: 'Copiar',
     s_agent_title: '🤖 Agente Remoto',
     s_agent_endpoint: 'URL del servidor',
     s_agent_ph: 'https://mi-servidor.com',
-    agent_info_1: 'Necesitás tu propio servidor para usar el modo Agente. Es el backend que habla con el LLM en la nube por vos.',
+    agent_info_1: 'Necesitas tu propio servidor para usar el modo Agente. Es el backend que habla con el LLM en la nube por ti.',
     agent_info_2: 'La forma más fácil es desplegarlo en Hostinger (VPS desde €4/mes):',
     agent_hostinger: 'Abrir Hostinger (descuento incluido)',
-    agent_info_3: 'O seguí la guía del repositorio para instalar el backend en cualquier servidor.',
+    agent_info_3: 'O sigue la guía del repositorio para instalar el backend en cualquier servidor.',
     s_apikey: 'API Key',
     s_apikey_hint: 'Se guarda en configuración global de VS Code',
     s_mcp_local_title: '🔌 Agregar herramienta MCP local',
-    s_mcp_local_desc: 'Conectá servidores MCP que corren en tu máquina — sin internet, 100% privado.',
+    s_mcp_local_desc: 'Conecta servidores MCP que corren en tu máquina — sin internet, 100% privado.',
     mcp_memory_label: 'Memoria local',
     mcp_memory_desc: 'Guarda contexto entre conversaciones, sin internet',
     mcp_fs_label: 'Acceso al sistema de archivos',
@@ -320,14 +320,14 @@ function applyLang(lang) {
     GUIDE_TEXTS['agent'].guide = '☁️ <strong>Agent mode.</strong> Set the endpoint and API key in <i class="codicon codicon-settings-gear"></i> Settings.';
   } else {
     GUIDE_TEXTS['local-needs-folder'].sub = 'Modo local — primero configurá tu carpeta de modelos';
-    GUIDE_TEXTS['local-needs-folder'].guide = '📁 <strong>¿Dónde guardás tus modelos?</strong><br>Elegí la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.';
+    GUIDE_TEXTS['local-needs-folder'].guide = '📁 <strong>¿Dónde están tus modelos?</strong><br>Elige la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.';
     GUIDE_TEXTS['local-needs-download'].sub = 'Modo local — inferencia en tu máquina, sin internet';
-    GUIDE_TEXTS['local-needs-download'].guide = '⬇️ <strong>Primer paso:</strong> descargá el modelo Qwen 2.5 (0.5B, ~350MB).<br>Solo la primera vez — después carga en segundos.';
-    GUIDE_TEXTS['local-ready'].sub = 'Modelo local listo — podés escribir tu primer mensaje';
+    GUIDE_TEXTS['local-needs-download'].guide = '⬇️ <strong>Primer paso:</strong> descarga el modelo Qwen 2.5 (0.5B, ~350MB).<br>Solo la primera vez — después carga en segundos.';
+    GUIDE_TEXTS['local-ready'].sub = 'Modelo local listo — puedes escribir tu primer mensaje';
     GUIDE_TEXTS['local-ready'].guide = '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribí tu pregunta abajo.';
     GUIDE_TEXTS['remote-offline'].sub = 'LM Studio / Ollama — no detectado';
-    GUIDE_TEXTS['remote-offline'].guide = '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abrí <strong>LM Studio</strong> o <strong>Ollama</strong> y cargá un modelo<br>• O cambiá el proveedor a <strong>Local</strong> para inferencia sin instalar nada';
-    GUIDE_TEXTS['remote-ready'].sub = 'Conectado — podés escribir tu primer mensaje';
+    GUIDE_TEXTS['remote-offline'].guide = '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abre <strong>LM Studio</strong> o <strong>Ollama</strong> y carga un modelo<br>• O cambia el proveedor a <strong>Local</strong> para inferencia sin instalar nada';
+    GUIDE_TEXTS['remote-ready'].sub = 'Conectado — puedes escribir tu primer mensaje';
     GUIDE_TEXTS['agent'].sub = 'Agent Cloud — verificá la conexión en Configuración';
     GUIDE_TEXTS['agent'].guide = '☁️ <strong>Modo Agente.</strong> Configurá el endpoint y la API key en <i class="codicon codicon-settings-gear"></i> Configuración.';
   }
@@ -360,7 +360,7 @@ function updateModelsDirCard(dir) {
     if (dir) {
       helper.style.display = 'block';
       prompt.value = 'Mueve todos mis modelos de IA a la carpeta: ' + dir + '\n' +
-        'Buscá modelos en las subcarpetas actuales (formatos: .onnx, .safetensors, .gguf, carpetas con config.json) y copialos o movelos ahí. Si ya están en esa carpeta, no hagas nada.';
+        'Busca modelos en las subcarpetas actuales (formatos: .onnx, .safetensors, .gguf, carpetas con config.json) y cópialos o muévelos ahí. Si ya están en esa carpeta, no hagas nada.';
     } else {
       helper.style.display = 'none';
     }
@@ -932,28 +932,28 @@ var welcomeSub     = document.getElementById('welcome-sub');
 var GUIDE_TEXTS = {
   'local-needs-folder': {
     sub: 'Modo local — primero configurá tu carpeta de modelos',
-    guide: '📁 <strong>¿Dónde guardás tus modelos?</strong><br>Elegí la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.',
+    guide: '📁 <strong>¿Dónde están tus modelos?</strong><br>Elige la carpeta donde están tus modelos descargados (disco externo, tarjeta SD, o cualquier carpeta local). La extensión los buscará ahí automáticamente.',
     showBtn: false,
     showFolderBtn: true,
   },
   'local-needs-download': {
     sub: 'Modo local — inferencia en tu máquina, sin internet',
-    guide: '⬇️ <strong>Primer paso:</strong> descargá el modelo Qwen 2.5 (0.5B, ~350MB).<br>Solo la primera vez — después carga en segundos.',
+    guide: '⬇️ <strong>Primer paso:</strong> descarga el modelo Qwen 2.5 (0.5B, ~350MB).<br>Solo la primera vez — después carga en segundos.',
     showBtn: true,
     showFolderBtn: false,
   },
   'local-ready': {
-    sub: 'Modelo local listo — podés escribir tu primer mensaje',
+    sub: 'Modelo local listo — puedes escribir tu primer mensaje',
     guide: '✅ <strong>Todo listo.</strong> El modelo está cargado en memoria. Escribí tu pregunta abajo.',
     showBtn: false, showFolderBtn: false,
   },
   'remote-offline': {
     sub: 'LM Studio / Ollama — no detectado',
-    guide: '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abrí <strong>LM Studio</strong> o <strong>Ollama</strong> y cargá un modelo<br>• O cambiá el proveedor a <strong>Local</strong> para inferencia sin instalar nada',
+    guide: '⚠️ <strong>No hay modelo detectado.</strong><br>Opciones:<br>• Abre <strong>LM Studio</strong> o <strong>Ollama</strong> y carga un modelo<br>• O cambia el proveedor a <strong>Local</strong> para inferencia sin instalar nada',
     showBtn: false, showFolderBtn: false,
   },
   'remote-ready': {
-    sub: 'Conectado — podés escribir tu primer mensaje',
+    sub: 'Conectado — puedes escribir tu primer mensaje',
     guide: '', showBtn: false, showFolderBtn: false,
   },
   'agent': {
@@ -1104,7 +1104,7 @@ window.addEventListener('message', function(event) {
       } else if (d.needsModelsDir) {
         mSel.disabled = true;
         var folderOpt = document.createElement('option');
-        folderOpt.value = ''; folderOpt.textContent = 'Elegí carpeta primero'; folderOpt.selected = true;
+        folderOpt.value = ''; folderOpt.textContent = 'Elige carpeta primero'; folderOpt.selected = true;
         mSel.appendChild(folderOpt);
         updateFolderBtnVisibility('local');
         updateWelcomeForProvider('local-needs-folder');
