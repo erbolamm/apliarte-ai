@@ -1324,6 +1324,19 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           <button onclick="reqCtx('file')"><i class="codicon codicon-file"></i> <span data-i18n="qa_file">Enviar archivo</span></button>
           <button onclick="reqCtx('selection')"><i class="codicon codicon-code"></i> <span data-i18n="qa_sel">Enviar selección</span></button>
         </div>
+
+        <div id="review-nudge">
+          <p class="review-nudge-text">¿Te está ahorrando tiempo? 10 segundos y ayudas a que más devs la descubran ⭐</p>
+          <div class="review-nudge-btns">
+            <a class="review-btn review-btn-vs" href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai&ssr=false#review-details" target="_blank">
+              <i class="codicon codicon-star-full"></i> Valorar en VS Marketplace
+            </a>
+            <a class="review-btn review-btn-ovsx" href="https://open-vsx.org/extension/apliarte/apliarte-ai/reviews" target="_blank">
+              <i class="codicon codicon-star-full"></i> Valorar en Open VSX
+            </a>
+          </div>
+          <button class="review-nudge-dismiss" onclick="dismissReviewNudge()" title="No mostrar más">Ya lo hice · No mostrar</button>
+        </div>
       </div>
     </div>
 

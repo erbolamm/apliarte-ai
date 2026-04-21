@@ -583,3 +583,30 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
   background:var(--vscode-textBlockQuote-background);padding:2px 6px;border-radius:3px;opacity:.8;}
 .hf-dl-copy{background:var(--vscode-button-secondaryBackground)!important;
   color:var(--vscode-button-secondaryForeground)!important;}
+
+/* ── Review nudge ─────────────────────────────────────────────── */
+#review-nudge{
+  margin-top:18px;padding:12px 14px;border-radius:8px;
+  background:var(--vscode-editorWidget-background);
+  border:1px solid var(--vscode-panel-border);
+  max-width:280px;text-align:center;
+}
+.review-nudge-text{font-size:12px;margin:0 0 10px;opacity:.85;line-height:1.4;}
+.review-nudge-btns{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.review-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  text-decoration:none;cursor:pointer;transition:filter .15s;
+}
+.review-btn:hover{filter:brightness(1.15);}
+.review-btn-vs{
+  background:#0078d4;color:#fff;
+}
+.review-btn-ovsx{
+  background:#c160ef;color:#fff;
+}
+.review-nudge-dismiss{
+  background:none;border:none;color:inherit;opacity:.35;
+  font-size:10px;cursor:pointer;padding:2px;
+}
+.review-nudge-dismiss:hover{opacity:.7;}

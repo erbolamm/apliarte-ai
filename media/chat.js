@@ -56,6 +56,21 @@ var activeConvId    = null;
 var sidebarOpen  = true;
 var currentProject = undefined;
 
+/* ── Review nudge ───────────────────────────────────────────── */
+(function() {
+  var nudge = document.getElementById('review-nudge');
+  if (!nudge) return;
+  if (localStorage.getItem('reviewDismissed') === '1') {
+    nudge.style.display = 'none';
+  }
+})();
+
+function dismissReviewNudge() {
+  localStorage.setItem('reviewDismissed', '1');
+  var nudge = document.getElementById('review-nudge');
+  if (nudge) nudge.style.display = 'none';
+}
+
 /* ── Sidebar toggle ────────────────────────────────────────── */
 sidebarToggle.addEventListener('click', function() {
   sidebarOpen = !sidebarOpen;
