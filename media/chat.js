@@ -180,21 +180,11 @@ document.getElementById('s-language').addEventListener('change', function() {
   applyLang(this.value);
 });
 
-settingsSave.addEventListener('click', function() {
-  vscode.postMessage({
-    type: 'saveSettings',
-    settings: {
-      preset:           document.getElementById('s-preset').value,
-      language:         document.getElementById('s-language').value,
-      lmstudioEndpoint: document.getElementById('s-lmstudio').value.trim(),
-      ollamaEndpoint:   document.getElementById('s-ollama').value.trim(),
-      agentEndpoint:    document.getElementById('s-agent').value.trim(),
-      agentApiKey:      document.getElementById('s-apikey').value.trim(),
-      modelsDir:        document.getElementById('s-modelsdir').value.trim(),
-    }
-  });
-  settingsOverlay.classList.remove('open');
+/* Preset auto-saves on change */
+document.getElementById('s-preset').addEventListener('change', function() {
+  vscode.postMessage({ type: 'saveSettings', settings: { preset: this.value } });
 });
+
 settingsOpenVsc.addEventListener('click', function() {
   vscode.postMessage({ type: 'openVscodeSettings' });
 });
@@ -926,9 +916,25 @@ document.getElementById('export-all').addEventListener('click', function() {
   expMenu.classList.remove('open');
 });
 
-/* ── Clear ─────────────────────────────────────────────────── */
+/* ── Clear (doble-step para evitar borrados accidentales) ───── */
+var _clearPending = false;
+var _clearTimer;
 clearB.addEventListener('click', function() {
-  if (!confirm('¿Limpiar esta conversación?')) return;
+  if (!_clearPending) {
+    _clearPending = true;
+    clearB.title = 'Click de nuevo para confirmar';
+    clearB.querySelector('i').className = 'codicon codicon-warning';
+    _clearTimer = setTimeout(function() {
+      _clearPending = false;
+      clearB.title = 'Limpiar chat';
+      clearB.querySelector('i').className = 'codicon codicon-trash';
+    }, 2500);
+    return;
+  }
+  clearTimeout(_clearTimer);
+  _clearPending = false;
+  clearB.title = 'Limpiar chat';
+  clearB.querySelector('i').className = 'codicon codicon-trash';
   msgs.innerHTML = '';
   if (welc) { welc.style.display = ''; msgs.appendChild(welc); }
   vscode.postMessage({ type: 'clearHistory' });
@@ -1299,10 +1305,6 @@ window.addEventListener('message', function(event) {
         applyLang(d.settings.language || 'es');
         document.getElementById('s-preset').value   = d.settings.preset || 'minimal';
         document.getElementById('s-language').value = d.settings.language || 'es';
-        document.getElementById('s-lmstudio').value = d.settings.lmstudioEndpoint || '';
-        document.getElementById('s-ollama').value   = d.settings.ollamaEndpoint || '';
-        document.getElementById('s-agent').value    = d.settings.agentEndpoint || '';
-        document.getElementById('s-apikey').value    = d.settings.agentApiKey || '';
         updateModelsDirCard(d.settings.modelsDir || '');
         var modelsDirBadge = document.getElementById('models-dir-badge');
         if (modelsDirBadge) {

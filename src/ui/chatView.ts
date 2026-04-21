@@ -1312,7 +1312,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         <p class="sub" id="welcome-sub" data-i18n="welcome_sub">100% local · 0 coste · Tus datos, tu máquina</p>
         <div id="welcome-guide" style="display:none;margin:10px 0 14px;padding:10px 14px;border-radius:8px;background:var(--vscode-editorWidget-background);border:1px solid var(--vscode-panel-border);text-align:left;font-size:12px;max-width:280px;"></div>
         <div id="welcome-dl-btn" style="display:none;margin-bottom:12px;">
-          <button id="auto-dl-btn" style="background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:8px;padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;" onclick="triggerAutoDownload()"><i class="codicon codicon-cloud-download"></i> <span data-i18n="dl_recommended">Descargar modelo recomendado (~350MB)</span></button>
+          <button id="auto-dl-btn" style="background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:8px;padding:9px 18px;cursor:pointer;font-size:13px;font-weight:600;" onclick="openHfBrowser()"><i class="codicon codicon-star-full"></i> <span data-i18n="dl_recommended">Ver modelos recomendados para mi equipo</span></button>
           <p style="margin-top:6px;font-size:10px;opacity:.45;" data-i18n="dl_once">Solo la primera vez. Se guarda localmente.</p>
         </div>
         <div id="welcome-folder-btn" style="display:none;margin-bottom:12px;">
@@ -1434,17 +1434,6 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         </div>
       </div>
       <div class="settings-section">
-        <div class="settings-section-title">LM Studio / Ollama</div>
-        <div class="settings-field">
-          <label data-i18n="s_lmstudio">Endpoint LM Studio</label>
-          <input type="text" id="s-lmstudio" placeholder="http://localhost:1234/v1">
-        </div>
-        <div class="settings-field">
-          <label data-i18n="s_ollama">Endpoint Ollama</label>
-          <input type="text" id="s-ollama" placeholder="http://localhost:11434">
-        </div>
-      </div>
-      <div class="settings-section">
         <div class="settings-section-title" data-i18n="s_models_dir_title">📁 Carpeta de modelos</div>
         <p class="settings-hint" style="margin-bottom:8px;" data-i18n="s_models_dir_desc">Elige dónde guardas tus modelos de IA. Puede ser un disco externo, una tarjeta SD o cualquier carpeta. Los buscará ahí automáticamente.</p>
         <div id="models-dir-card">
@@ -1463,29 +1452,6 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         </div>
       </div>
 
-      <div class="settings-section">
-        <div class="settings-section-title" data-i18n="s_agent_title">🤖 Agente Remoto</div>
-        <div class="settings-field">
-          <label data-i18n="s_agent_endpoint">URL del servidor</label>
-          <div style="display:flex;gap:6px;align-items:center;">
-            <input type="text" id="s-agent" data-i18n-placeholder="s_agent_ph" placeholder="https://mi-servidor.com" style="flex:1">
-            <button class="info-btn" onclick="toggleAgentInfo()" title="¿Cómo creo mi propio servidor?">ℹ</button>
-          </div>
-          <div id="agent-info-box" class="info-box" style="display:none;">
-            <p data-i18n="agent_info_1">Necesitas tu propio servidor para usar el modo Agente. Es el backend que habla con el LLM en la nube por ti.</p>
-            <p data-i18n="agent_info_2">La forma más fácil es desplegarlo en Hostinger (VPS desde €4/mes):</p>
-            <button class="host-btn" onclick="openUrl('https://www.hostinger.com/es?REFERRALCODE=APLIARTE')">
-              🚀 <span data-i18n="agent_hostinger">Abrir Hostinger (descuento incluido)</span>
-            </button>
-            <p style="margin-top:8px;" data-i18n="agent_info_3">O sigue la guía del repositorio para instalar el backend en cualquier servidor.</p>
-          </div>
-        </div>
-        <div class="settings-field">
-          <label data-i18n="s_apikey">API Key</label>
-          <input type="password" id="s-apikey" placeholder="sk-...">
-          <div class="settings-hint" data-i18n="s_apikey_hint">Se guarda en configuración global de VS Code</div>
-        </div>
-      </div>
 
       <div class="settings-section">
         <div class="settings-section-title" data-i18n="s_mcp_local_title">🔌 Agregar herramienta MCP local</div>
@@ -1568,8 +1534,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       </div>
     </div>
     <div id="settings-footer">
-      <button class="settings-btn" id="settings-open-vsc"><i class="codicon codicon-gear"></i> <span data-i18n="s_open_vsc">Abrir VS Code Settings</span></button>
-      <button class="settings-btn" id="settings-save"><i class="codicon codicon-save"></i> <span data-i18n="s_save">Guardar</span></button>
+      <button class="settings-btn settings-btn-full" id="settings-open-vsc"><i class="codicon codicon-gear"></i> Endpoints y API keys (VS Code Settings)</button>
     </div>
   </div>
 </div>

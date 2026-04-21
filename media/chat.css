@@ -300,9 +300,9 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
   position:sticky;bottom:0;background:var(--vscode-editorWidget-background);
 }
 .settings-btn{flex:1;padding:7px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;}
-#settings-save{background:var(--vscode-button-background);color:var(--vscode-button-foreground);}
-#settings-save:hover{filter:brightness(1.15);}
+.settings-btn-full{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;}
 #settings-open-vsc{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);}
+#settings-open-vsc:hover{filter:brightness(1.1);}
 #settings-open-vsc:hover{filter:brightness(1.15);}
 
 /* ── Support buttons ───────────────────────────────────── */
