@@ -1028,6 +1028,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   // ── Context ────────────────────────────────────────────────────────────────
 
+  public getInlineCompletionContext(): { endpoint: string; model: string | undefined } | undefined {
+    if (this._provider !== 'remote' || !this._remoteEndpoint) return undefined;
+    return { endpoint: this._remoteEndpoint, model: this._currentModel };
+  }
+
   public async refreshAfterSettingsChange(): Promise<void> {
     this._sendSettings();
     if (this._provider === 'local') {

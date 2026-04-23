@@ -282,6 +282,11 @@
           "default": "",
           "description": "API key del servidor de agente remoto. Se guarda en la configuración global de VS Code."
         },
+        "apliarteAi.inlineCompletion": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Activa el autocompletado inline (Tab) en el editor. Solo funciona en modo **Remote** (LM Studio / Ollama) con modelos que soporten FIM como Qwen2.5-Coder. Desactivado por defecto."
+        },
         "apliarteAi.mcpServers": {
           "type": "object",
           "default": {},

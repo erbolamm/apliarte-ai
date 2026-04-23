@@ -15,6 +15,7 @@ import { collectWorkspaceFiles } from './tools/executor';
 import { McpServerManager } from './mcp/serverManager';
 import { getToolRegistry } from './mcp/toolRegistry';
 import { getMcpResourceRegistry } from './mcp/resourceRegistry';
+import { registerInlineCompletionProvider } from './core/inlineCompletion';
 import type { McpServerConfig } from './mcp/types';
 
 let _mcpManager: McpServerManager | undefined;
@@ -205,6 +206,13 @@ export function activate(context: vscode.ExtensionContext): void {
   const chatProvider = new ChatViewProvider(context.extensionUri, context.globalState);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ChatViewProvider.viewType, chatProvider)
+  );
+
+  // ── Inline completions ─────────────────────────────────
+  registerInlineCompletionProvider(
+    context,
+    () => chatProvider.getInlineCompletionContext()?.endpoint,
+    () => chatProvider.getInlineCompletionContext()?.model,
   );
 
   // Notify webview when models folder changes (chooseModelsDir command or manual edit)
