@@ -28,6 +28,26 @@
   <a href="https://open-vsx.org/extension/apliarte/apliarte-ai">Open VSX (Cursor/Windsurf/Antigravity)</a>
 </p>
 
+<p align="center">
+  <img src="media/screenshots/01-chat.png" alt="Chat en acción" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/screenshots/02-model-recommendations.png" alt="Modelos recomendados por RAM" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/screenshots/03-mcp-toolcalling.png" alt="MCP tool-calling en acción" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/screenshots/04-mode-selector.png" alt="Selector de modos explicado" width="640" />
+</p>
+
+<p align="center">
+  <img src="media/screenshots/05-context-menu.png" alt="Menú contextual con acciones rápidas" width="640" />
+</p>
+
 ---
 
 ## Por qué ApliArte AI
