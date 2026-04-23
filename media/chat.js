@@ -30,7 +30,6 @@ var sidebarToggle = document.getElementById('sidebar-toggle');
 var settingsOverlay = document.getElementById('settings-overlay');
 var settingsBtn     = document.getElementById('settings-btn');
 var settingsClose   = document.getElementById('settings-close');
-var settingsSave    = document.getElementById('settings-save');
 var settingsOpenVsc = document.getElementById('settings-open-vsc');
 var hfOverlay     = document.getElementById('hf-overlay');
 var hfClose       = document.getElementById('hf-close');
@@ -1316,9 +1315,6 @@ window.addEventListener('message', function(event) {
           }
         }
       }
-      break;
-
-    case 'settingsSaved':
       break;
 
     case 'mcpStatus':

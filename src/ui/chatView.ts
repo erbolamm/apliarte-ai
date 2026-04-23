@@ -463,20 +463,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     const cfg = vscode.workspace.getConfiguration('apliarteAi');
     const target = vscode.ConfigurationTarget.Global;
 
-    if ('preset' in settings)           await cfg.update('preset', settings.preset, target);
-    if ('lmstudioEndpoint' in settings) await cfg.update('lmstudioEndpoint', settings.lmstudioEndpoint, target);
-    if ('ollamaEndpoint' in settings)   await cfg.update('ollamaEndpoint', settings.ollamaEndpoint, target);
-    if ('agentEndpoint' in settings)    await cfg.update('agentEndpoint', settings.agentEndpoint, target);
-    if ('agentApiKey' in settings)      await cfg.update('agentApiKey', settings.agentApiKey, target);
-    if ('language' in settings)         await cfg.update('language', settings.language, target);
-    if ('modelsDir' in settings)        await cfg.update('modelsDir', settings.modelsDir, target);
-
-    // Reset caches that depend on config
-    this._remoteEndpoint = undefined;
-
-    this._post({ type: 'settingsSaved' });
-    vscode.window.showInformationMessage('ApliArte AI: Configuración guardada.');
-    await this._sendConnectionStatus();
+    if ('preset' in settings)    await cfg.update('preset', settings.preset, target);
+    if ('language' in settings)  await cfg.update('language', settings.language, target);
+    if ('modelsDir' in settings) await cfg.update('modelsDir', settings.modelsDir, target);
   }
 
   // ── Chat ───────────────────────────────────────────────────────────────────
@@ -1451,7 +1440,6 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           </div>
         </div>
       </div>
-
 
       <div class="settings-section">
         <div class="settings-section-title" data-i18n="s_mcp_local_title">🔌 Agregar herramienta MCP local</div>
