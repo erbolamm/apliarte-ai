@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.9.4] - 2026-04-22
+
+### Changed
+- Settings panel limpiado: eliminados campos de endpoints duplicados (LM Studio, Ollama, Agent, API key) — ya existían en VS Code Settings nativo sin sincronización real. Ahora el panel tiene solo lo que funciona: preset, idioma, carpeta de modelos, MCP, soporte
+- Botón "Guardar" eliminado del settings — no tenía handler, nunca hizo nada
+- `_saveSettings` simplificado: solo maneja preset, idioma y modelsDir
+- ROADMAP actualizado al estado real de v0.9.4
+
+### Fixed
+- Variable `settingsSave` muerta eliminada del JS (apuntaba a elemento inexistente)
+- Handler `settingsSaved` vacío eliminado
+
+## [0.9.3] - 2026-04-21
+
+### Added
+- **Recomendador de modelos por hardware**: el panel "Buscar modelos" ahora tiene dos pestañas — "⭐ Recomendados para mi equipo" detecta la RAM del sistema automáticamente y muestra solo los modelos compatibles, ordenados por uso. Incluye 10 modelos curados (5 ONNX para modo Local, 5 para Ollama/modo Remote)
+- **Indicadores de soporte de herramientas**: cada modelo en la lista de recomendados muestra badge 🔧 "Herramientas MCP" si soporta tool-calling, o "Sin herramientas" si no. Elimina la confusión de qué modelos funcionan con MCP
+- **Popup explicativo de modos** (`?` junto al selector Local/Remote/Agent): explica en lenguaje sencillo qué necesitas para cada modo, pros/contras, y para qué tipo de tarea es ideal. El modo activo aparece resaltado
+- **Comandos Ollama con un click**: los modelos Ollama en la lista de recomendados incluyen botón "📋 Copiar comando" con el `ollama pull ...` listo para pegar en la terminal
+- **Tests unitarios** (40 en total): `JsonRpcClient` (8), `ToolRegistry` (12), `McpServerManager` (20) — infraestructura de test con stub de vscode y tsconfig separado
+
+### Fixed
+- `instanceof StdioTransport` en `McpServerManager.start()` reemplazado por chequeo duck-typed sobre el config — permite inyección de transportes en tests sin herencia forzada
+
+## [0.9.2] - 2026-04-21
+
+### Added
+- **Proveedor Jan**: auto-detección de [Jan](https://jan.ai) en `http://localhost:1337/v1` — aparece como opción Remote junto a LM Studio y Ollama
+- **Detección de modelos Ollama**: escanea el manifests store de Ollama (`~/.ollama/models/manifests/`) y muestra los modelos instalados en el selector como informativos (🟣) sin mezclarlos con los modelos ONNX locales
+- **`extractSignatures` tool**: nueva herramienta del agente que extrae solo las firmas (funciones, clases, interfaces, tipos) de un archivo fuente. Reduce el contexto necesario ~80% respecto a leer el archivo completo. Soporta TS/JS/Python/Go/Rust
+- **Indexación con `rg --files`**: `collectWorkspaceFiles` usa ripgrep cuando está disponible — respeta `.gitignore`, más rápido y limpio que `findFiles`. Fallback automático
+- **MCP quick-setup completo**: botones de instalación con un click para GitHub, PostgreSQL, SQLite y Playwright (se suman a los ya existentes de memory y filesystem)
+- **MCP stack templates**: aplica varios servidores MCP de una sola vez con plantillas por stack — Node.js/TS (memory+filesystem+github), Python (memory+filesystem+postgres), Go (memory+filesystem+github), Full-stack web (memory+filesystem+github+playwright)
+- **Inferencia GGUF nativa**: carga y ejecuta modelos `.gguf` directamente desde VS Code sin LM Studio ni Ollama — usa `node-llama-cpp` instalado on-demand en `deps-gguf/`. Streaming token a token con `onTextChunk`
+- **`docs/mcp.md`**: documentación completa del cliente MCP — configuración stdio/HTTP, servidores verificados, quick-setup, stack templates, creación de servidores propios en TS y Python
+- **Español España**: eliminado todo el voseo argentino del código, UI, docs y comentarios
+
 ## [0.9.0] - 2026-04-20
 
 ### Added

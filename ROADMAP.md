@@ -1,6 +1,6 @@
 # Roadmap — ApliArte AI
 
-Estado actual: **v0.8.0** lista para publicar · **v0.9** siguiente
+Estado actual: **v0.9.4** publicada · **v1.0** en preparación
 
 > **¿Primera vez?** Leé la [Guía de usuario](GUIDE.md) — explica instalación, modos, MCP y todo lo demás en lenguaje simple.
 
@@ -325,32 +325,46 @@ const MCP_STACK_TEMPLATES = {
 
 Foco: calidad, estabilidad y documentación. Sin features nuevas grandes.
 
-#### 1.0.1 — Tests del cliente MCP
+#### 1.0.1 — Tests del cliente MCP ✅ COMPLETO
 
-- [ ] Tests unitarios para `src/mcp/jsonrpc.ts`: serialización/deserialización JSON-RPC 2.0, IDs de requests, manejo de errores, batch requests
-- [ ] Tests de integración para `src/mcp/serverManager.ts`: spawn/stop/restart de proceso stdio, reconexión HTTP, timeout handling
-- [ ] Tests para `src/mcp/toolRegistry.ts`: namespace collision, builtin vs MCP dispatch, tool not found
-- [ ] Framework: `@vscode/test-cli` + `mocha` (ya en devDependencies)
-- [ ] Añadir script `"test": "vscode-test"` al `package.json`
+- [x] 8 tests para `src/mcp/jsonrpc.ts`: correlación ID, IDs secuenciales, errores JSON-RPC, timeout, cierre, transport close/error, notificaciones
+- [x] 12 tests para `src/mcp/toolRegistry.ts`: registro, colisión, dispatch builtin vs MCP, discovery con namespace, unregister, formateo de errores
+- [x] 20 tests para `src/mcp/serverManager.ts`: start/ready, handshake, stdio vs http, fallos, stop, transport close mid-session, restart, sync, stopAll, eventos
+- [x] Framework: Node.js native test runner + tsx, vscode mock stub, tsconfig.test.json separado
 
-#### 1.0.2 — Documentación del MCP Client
+#### 1.0.2 — Documentación del MCP Client ✅ COMPLETO
 
-- [ ] `docs/mcp.md`: guía completa — qué es MCP, cómo configurar `apliarteAi.mcpServers`, ejemplos para cada transporte
-- [ ] `docs/mcp.md`: sección "Crear tu propio servidor MCP" con ejemplo mínimo en TypeScript y Python
-- [ ] Actualizar `GUIDE.md` con sección MCP
-- [ ] Actualizar `README.md` con tabla de servidores MCP verificados
+- [x] `docs/mcp.md`: guía completa — qué es MCP, stdio/HTTP, env vars, servidores verificados, quick-setup, stack templates, crear servidor propio en TS y Python
+- [x] `GUIDE.md` actualizado con sección MCP completa
+- [x] `README.md` actualizado con tabla de servidores verificados
 
-#### 1.0.3 — Estabilidad de API y breaking changes
+#### 1.0.3 — Estabilidad de API ✅ COMPLETO
 
-- [ ] Deprecar formalmente `apliarteAi.engramEndpoint` (ya marcado) — eliminar en v1.0
-- [ ] Revisar todos los `settings` en `package.json`: descripciones completas, ejemplos, valores por defecto correctos
-- [ ] Asegurar que `chatView.ts` no use `innerHTML` con contenido sin sanitizar (XSS en webview)
+- [x] `apliarteAi.engramEndpoint` eliminado (migración automática a mcpServers.engram)
+- [x] Todos los settings con `markdownDescription` y ejemplos
+- [x] XSS audit — todo el contenido de usuario pasa por `esc()` (DOM textContent)
+- [x] Campos muertos en settings panel eliminados (endpoints, botón Guardar sin handler)
 
 #### 1.0.4 — Marketplace
 
-- [ ] Screenshots actualizados (v0.9 UI — sidebar conversaciones, MCP badges, Multiverso tabs, t/s badge)
-- [ ] GIF animado en README mostrando el flujo completo: Local → chat → Alt → aplicar diff
-- [ ] Categorías y tags del Marketplace revisados
+- [ ] Screenshots (5 capturas, 1280×800) — pendiente
+- [ ] GIF animado — pendiente
+- [x] Tags y categorías revisados
+
+#### 1.0.5 — UX y onboarding ✅ COMPLETO
+
+- [x] Recomendador de modelos por RAM detectada automáticamente
+- [x] Badges 🔧 Herramientas MCP / Sin herramientas por modelo
+- [x] Popup explicativo de modos Local/Remote/Agent (`?` junto al selector)
+- [x] Review nudge con botones directos a VS Marketplace y Open VSX
+- [x] Español España en toda la UI, docs y código
+
+#### 1.0.6 — Inline completions (próximo)
+
+- [ ] `vscode.languages.registerInlineCompletionItemProvider` — Tab autocomplete en el editor
+- [ ] Debounce 600ms, contexto ±30 líneas, FIM prompt para Qwen2.5-Coder
+- [ ] Solo en modo Remote (modelos locales demasiado lentos)
+- [ ] Setting `apliarteAi.inlineCompletion` (boolean, default false)
 
 ---
 
