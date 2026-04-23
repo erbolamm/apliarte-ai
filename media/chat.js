@@ -807,46 +807,19 @@ function renderMcpBadges(servers) {
   mcpServers = servers || [];
   if (!mcpBadgesEl) return;
   mcpBadgesEl.innerHTML = '';
-  if (mcpServers.length === 0) return;
-
-  var INLINE_LIMIT = 3;
-
-  if (mcpServers.length <= INLINE_LIMIT) {
-    // Individual badges
-    mcpServers.forEach(function(s) {
-      var b = document.createElement('span');
-      b.className = 'mcp-badge ' + (s.status || 'stopped');
-      var tooltip = s.name + ' — ' + s.status;
-      if (s.serverInfo && s.serverInfo.name) tooltip += ' (' + s.serverInfo.name + (s.serverInfo.version ? ' ' + s.serverInfo.version : '') + ')';
-      if (s.status === 'ready') tooltip += ' · ' + (s.toolCount || 0) + ' tools';
-      if (s.error) tooltip += ' — ' + s.error;
-      b.title = tooltip;
-      var count = s.status === 'ready' && s.toolCount > 0 ? ' · ' + s.toolCount : '';
-      b.innerHTML = '<span class="mcp-dot"></span>' + esc(s.name) + count;
-      b.addEventListener('click', function(e) { e.stopPropagation(); toggleMcpPanel(); });
-      mcpBadgesEl.appendChild(b);
-    });
-  } else {
-    // Collapsed summary badge — worst status wins
-    var statusPriority = { error: 3, starting: 2, ready: 1, stopped: 0 };
-    var worstStatus = 'stopped';
-    var totalTools = 0;
-    var tooltip = mcpServers.map(function(s) {
-      var pri = statusPriority[s.status] || 0;
-      if (pri > (statusPriority[worstStatus] || 0)) worstStatus = s.status;
-      if (s.status === 'ready') totalTools += (s.toolCount || 0);
-      return s.name + ' (' + (s.status || 'stopped') + (s.toolCount ? ' · ' + s.toolCount + ' tools' : '') + ')';
-    }).join('\n');
-
+  mcpServers.forEach(function(s) {
     var b = document.createElement('span');
-    b.className = 'mcp-badge ' + worstStatus;
+    b.className = 'mcp-badge ' + (s.status || 'stopped');
+    var tooltip = s.name + ' — ' + s.status;
+    if (s.serverInfo && s.serverInfo.name) tooltip += ' (' + s.serverInfo.name + (s.serverInfo.version ? ' ' + s.serverInfo.version : '') + ')';
+    if (s.status === 'ready') tooltip += ' · ' + (s.toolCount || 0) + ' tools';
+    if (s.error) tooltip += ' — ' + s.error;
     b.title = tooltip;
-    var toolsLabel = totalTools > 0 ? ' · ' + totalTools + ' tools' : '';
-    b.innerHTML = '<span class="mcp-dot"></span>MCP · ' + mcpServers.length + toolsLabel;
+    var count = s.status === 'ready' && s.toolCount > 0 ? ' · ' + s.toolCount : '';
+    b.innerHTML = '<span class="mcp-dot"></span>' + esc(s.name) + count;
     b.addEventListener('click', function(e) { e.stopPropagation(); toggleMcpPanel(); });
     mcpBadgesEl.appendChild(b);
-  }
-
+  });
   if (mcpPanelOpen) renderMcpPanel();
 }
 

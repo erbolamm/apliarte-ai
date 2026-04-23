@@ -12,6 +12,7 @@ body{
   border-bottom:1px solid var(--vscode-panel-border);
   background:var(--vscode-sideBar-background);
   position:sticky;top:0;z-index:10;flex-shrink:0;
+  flex-wrap:wrap;
 }
 #status{display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;min-width:0;}
 .dot{width:7px;height:7px;border-radius:50%;background:#ef4444;flex-shrink:0;}
@@ -57,7 +58,7 @@ body{
 .tb.active{opacity:1;color:var(--vscode-button-background);}
 
 /* ── MCP badges ───────────────────────────────────────── */
-#mcp-badges{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;min-width:0;}
+#mcp-badges{display:flex;align-items:center;gap:3px;flex-wrap:wrap;min-width:0;}
 .mcp-badge{
   font-size:9px;padding:1px 5px;border-radius:10px;
   background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);
