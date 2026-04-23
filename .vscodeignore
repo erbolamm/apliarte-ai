@@ -19,3 +19,6 @@ media/codicons/ico.png
 estudio*
 *.vsix
 SCR-*.png
+*.png
+!icon.png
+!media/**
