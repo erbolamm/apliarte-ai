@@ -14,9 +14,9 @@ MCP es un protocolo abierto que permite a los LLMs usar herramientas externas de
 
 Edita `apliarteAi.mcpServers` en VS Code Settings (`Cmd+,` → busca `apliarteAi.mcpServers`).
 
-### Transporte stdio
+### Transporte stdio (recomendado)
 
-El servidor MCP se ejecuta como proceso hijo. Requiere Node.js.
+La extensión lanza el servidor como proceso hijo automáticamente. No necesitas levantar nada manualmente.
 
 ```json
 {
@@ -37,7 +37,7 @@ El servidor MCP se ejecuta como proceso hijo. Requiere Node.js.
 
 ### Transporte HTTP
 
-El servidor MCP ya está corriendo como servicio HTTP (MCP Streamable HTTP).
+Para servidores MCP remotos ya corriendo (en tu VPS, red local, etc.).
 
 ```json
 {
@@ -80,16 +80,105 @@ El servidor MCP ya está corriendo como servicio HTTP (MCP Streamable HTTP).
 
 ---
 
+## Engram — memoria persistente cross-session
+
+[Engram](https://github.com/Gentleman-Programming/engram) es un servidor de memoria persistente para agentes de IA. Usa SQLite + FTS5, cero dependencias externas y expone 16 herramientas MCP. El LLM guarda y recupera contexto entre conversaciones automáticamente.
+
+### Instalación local
+
+```bash
+brew install gentleman-programming/tap/engram
+```
+
+### Configuración (stdio — recomendado)
+
+```json
+{
+  "apliarteAi.mcpServers": {
+    "engram": {
+      "transport": "stdio",
+      "command": "engram",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+La extensión lanza `engram mcp` automáticamente. Los datos se guardan en `~/.engram/engram.db`.
+
+### Variables de entorno opcionales
+
+| Variable | Descripción | Defecto |
+|----------|-------------|---------|
+| `ENGRAM_DATA_DIR` | Carpeta de la base de datos | `~/.engram` |
+| `ENGRAM_PORT` | Puerto del servidor HTTP local | `7437` |
+
+### Herramientas disponibles (16)
+
+| Herramienta | Qué hace |
+|-------------|----------|
+| `mem_save` | Guarda un recuerdo con tipo, proyecto y contenido |
+| `mem_search` | Búsqueda full-text en todos los recuerdos |
+| `mem_context` | Contexto reciente de la sesión actual |
+| `mem_update` | Actualiza un recuerdo existente por ID |
+| `mem_delete` | Elimina un recuerdo |
+| `mem_get_observation` | Recupera el contenido completo de un recuerdo por ID |
+| `mem_timeline` | Historial cronológico de recuerdos |
+| `mem_stats` | Estadísticas de uso de memoria |
+| `mem_current_project` | Proyecto activo detectado automáticamente |
+| `mem_merge_projects` | Fusiona recuerdos de dos proyectos |
+| `mem_suggest_topic_key` | Sugiere clave de tema para evitar duplicados |
+| `mem_save_prompt` | Guarda el prompt del usuario como contexto |
+| `mem_session_start` | Inicia una sesión con firma |
+| `mem_session_end` | Cierra la sesión activa |
+| `mem_session_summary` | Guarda resumen de fin de sesión |
+| `mem_capture_passive` | Captura contexto de forma pasiva |
+
+### Deploy en VPS (equipo / cloud)
+
+Para compartir memoria entre varios desarrolladores o acceder desde cualquier máquina:
+
+**Requisitos:** VPS con Linux, Docker y Docker Compose instalados.
+
+```bash
+# Clona el repo
+git clone https://github.com/Gentleman-Programming/engram
+cd engram
+
+# Levanta el servidor cloud
+docker compose -f docker-compose.cloud.yml up -d
+```
+
+Una vez corriendo, configura la extensión con transporte HTTP apuntando a tu VPS:
+
+```json
+{
+  "apliarteAi.mcpServers": {
+    "engram": {
+      "transport": "http",
+      "url": "https://tu-vps.com/mcp",
+      "headers": {
+        "Authorization": "Bearer tu-token"
+      }
+    }
+  }
+}
+```
+
+> Los datos del cloud se sincronizan con SQLite local. El cloud es opcional — local siempre es la fuente de verdad.
+
+---
+
 ## Servidores verificados
 
-| Servidor | Paquete npm | Herramientas |
-|----------|-------------|--------------|
-| Memoria persistente | `@modelcontextprotocol/server-memory` | `create_entities`, `search_nodes`, `read_graph` |
-| Filesystem | `@modelcontextprotocol/server-filesystem` | `read_file`, `write_file`, `list_directory`, `search_files` |
-| GitHub | `@modelcontextprotocol/server-github` | `search_repositories`, `get_file_contents`, `create_issue`, `create_pull_request` |
-| PostgreSQL | `@modelcontextprotocol/server-postgres` | `query`, `list_tables`, `describe_table` |
-| SQLite | `@modelcontextprotocol/server-sqlite` | `read_query`, `write_query`, `list_tables` |
-| Browser (Playwright) | `@playwright/mcp` | `navigate`, `click`, `screenshot`, `fill` |
+| Servidor | Instalación | Herramientas destacadas |
+|----------|-------------|------------------------|
+| **Engram** (memoria persistente) | `brew install gentleman-programming/tap/engram` | `mem_save`, `mem_search`, `mem_context` |
+| Filesystem | `npx @modelcontextprotocol/server-filesystem` | `read_file`, `write_file`, `list_directory` |
+| GitHub | `npx @modelcontextprotocol/server-github` | `search_repositories`, `create_issue`, `create_pull_request` |
+| PostgreSQL | `npx @modelcontextprotocol/server-postgres` | `query`, `list_tables`, `describe_table` |
+| SQLite | `npx @modelcontextprotocol/server-sqlite` | `read_query`, `write_query`, `list_tables` |
+| Browser (Playwright) | `npx @playwright/mcp` | `navigate`, `click`, `screenshot`, `fill` |
 
 ---
 

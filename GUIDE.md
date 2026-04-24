@@ -151,18 +151,9 @@ Abre la configuración de VS Code (`Cmd+,`) y busca `apliarteAi.mcpServers`.
 
 Hay dos tipos de servidores:
 
-#### Tipo `http` — servidor que ya está corriendo
+#### Tipo `stdio` — programa que la extensión arranca (recomendado)
 
-```json
-"apliarteAi.mcpServers": {
-  "nombre-del-servidor": {
-    "transport": "http",
-    "url": "http://localhost:4200"
-  }
-}
-```
-
-#### Tipo `stdio` — programa que la extensión arranca
+La extensión lanza el servidor automáticamente como proceso hijo. No necesitas levantar nada manualmente.
 
 ```json
 "apliarteAi.mcpServers": {
@@ -174,22 +165,42 @@ Hay dos tipos de servidores:
 }
 ```
 
-### Ejemplos reales
+#### Tipo `http` — servidor remoto ya corriendo
 
-#### Engram (memoria persistente cross-session)
-
-Primero levantá el servidor Engram en tu máquina (ver su documentación). Luego:
+Para servidores en tu VPS o red local.
 
 ```json
 "apliarteAi.mcpServers": {
-  "engram": {
+  "nombre-del-servidor": {
     "transport": "http",
-    "url": "http://localhost:4200"
+    "url": "https://tu-servidor.com/mcp"
   }
 }
 ```
 
-Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones anteriores usando herramientas como `mem_save` y `mem_search` de forma automática.
+### Ejemplos reales
+
+#### Engram (memoria persistente cross-session)
+
+Instala Engram con Homebrew:
+
+```bash
+brew install gentleman-programming/tap/engram
+```
+
+Luego configura en VS Code Settings:
+
+```json
+"apliarteAi.mcpServers": {
+  "engram": {
+    "transport": "stdio",
+    "command": "engram",
+    "args": ["mcp"]
+  }
+}
+```
+
+Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones anteriores usando herramientas como `mem_save` y `mem_search` de forma automática. Los datos se guardan en `~/.engram/engram.db`.
 
 #### Filesystem — que la IA lea/escriba archivos
 
@@ -225,8 +236,9 @@ Una vez conectado, el LLM puede guardar y recuperar recuerdos de conversaciones 
 ```json
 "apliarteAi.mcpServers": {
   "engram": {
-    "transport": "http",
-    "url": "http://localhost:4200"
+    "transport": "stdio",
+    "command": "engram",
+    "args": ["mcp"]
   },
   "filesystem": {
     "transport": "stdio",
