@@ -556,15 +556,6 @@ var RECOMMENDED_MODELS = [
     desc: 'Más capaz que el 0.5B manteniendo buen rendimiento en hardware modesto.'
   },
   {
-    id: 'onnx-community/Qwen2.5-Coder-7B-Instruct',
-    label: 'Qwen2.5-Coder 7B',
-    mode: 'local',
-    ramGb: 8,
-    toolCalling: true,
-    badge: '🔧 Herramientas · Código',
-    desc: 'El mejor modelo de código local. Soporta tool-calling (MCP). Necesitas 8 GB de RAM libre.'
-  },
-  {
     id: 'onnx-community/Llama-3.2-3B-Instruct',
     label: 'Llama 3.2 3B',
     mode: 'local',
