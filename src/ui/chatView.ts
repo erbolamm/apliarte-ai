@@ -199,7 +199,14 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           break;
 
         case 'searchHfHub':
-          await this._searchHuggingFaceHub(typeof data.query === 'string' ? data.query : '');
+          await this._searchHuggingFaceHub(
+            typeof data.query === 'string' ? data.query : '',
+            data.filter === 'gguf' ? 'gguf' : 'onnx',
+          );
+          break;
+
+        case 'listGgufFiles':
+          await this._listGgufFiles(typeof data.repoId === 'string' ? data.repoId : '');
           break;
 
         case 'addMcpServer': {
@@ -1006,10 +1013,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  private async _searchHuggingFaceHub(query: string): Promise<void> {
+  private async _searchHuggingFaceHub(query: string, filter: 'onnx' | 'gguf' = 'onnx'): Promise<void> {
     try {
       const params = new URLSearchParams({
-        filter: 'onnx',
+        filter,
         sort: 'downloads',
         direction: '-1',
         limit: '20',
@@ -1019,10 +1026,26 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
       if (!res.ok) throw new Error(`HF API error: ${res.status}`);
       const models = await res.json() as Array<{ modelId: string; downloads?: number; pipeline_tag?: string }>;
-      this._post({ type: 'hfResults', models });
+      this._post({ type: 'hfResults', models, filter });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this._post({ type: 'hfResults', models: [], error: msg });
+    }
+  }
+
+  private async _listGgufFiles(repoId: string): Promise<void> {
+    try {
+      const url = `https://huggingface.co/api/models/${repoId}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      if (!res.ok) throw new Error(`HF API error: ${res.status}`);
+      const data = await res.json() as { siblings?: Array<{ rfilename: string }> };
+      const files = (data.siblings ?? [])
+        .map((s) => s.rfilename)
+        .filter((f) => f.endsWith('.gguf'));
+      this._post({ type: 'ggufFileList', repoId, files });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this._post({ type: 'ggufFileList', repoId, files: [], error: msg });
     }
   }
 
@@ -1388,8 +1411,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
     <!-- Tab: búsqueda libre -->
     <div id="hf-tab-search" class="hf-tab-panel" style="display:none">
+      <div id="hf-format-toggle">
+        <button class="hf-fmt-btn active" data-fmt="onnx">ONNX <span class="hf-fmt-hint">modo Local</span></button>
+        <button class="hf-fmt-btn" data-fmt="gguf">GGUF <span class="hf-fmt-hint">nativo / Ollama</span></button>
+      </div>
       <div id="hf-search-row">
-        <input type="text" id="hf-search-input" placeholder="Ej: Qwen, SmolLM, phi…">
+        <input type="text" id="hf-search-input" placeholder="Ej: Qwen, Llama, Mistral…">
         <button id="hf-search-btn"><i class="codicon codicon-search"></i> Buscar</button>
       </div>
       <div id="hf-results">

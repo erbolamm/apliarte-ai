@@ -36,6 +36,7 @@ var hfClose       = document.getElementById('hf-close');
 var hfSearchInput = document.getElementById('hf-search-input');
 var hfSearchBtn   = document.getElementById('hf-search-btn');
 var hfResultsEl   = document.getElementById('hf-results');
+var hfCurrentFmt  = 'onnx';
 var modeInfoBtn   = document.getElementById('mode-info-btn');
 var modeInfoPopup = document.getElementById('mode-info-popup');
 var modeInfoClose = document.getElementById('mode-info-close');
@@ -469,6 +470,19 @@ document.querySelectorAll('.hf-tab').forEach(function(btn) {
   });
 });
 
+/* ── ONNX / GGUF format toggle ──────────────────────────────── */
+document.querySelectorAll('.hf-fmt-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.hf-fmt-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    hfCurrentFmt = btn.dataset.fmt;
+    if (hfSearchInput) hfSearchInput.placeholder = hfCurrentFmt === 'gguf'
+      ? 'Ej: Qwen3, Llama, Mistral, DeepSeek…'
+      : 'Ej: Qwen, SmolLM, phi…';
+    if (hfResultsEl) hfResultsEl.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Busca modelos ' + (hfCurrentFmt === 'gguf' ? 'GGUF' : 'ONNX') + ' en HuggingFace</div>';
+  });
+});
+
 /* ── Folder button visibility ───────────────────────────────── */
 var folderBtn = document.getElementById('folder-btn');
 function updateFolderBtnVisibility(provider) {
@@ -698,10 +712,10 @@ function copyOllamaCmd(cmd, btn) {
 function searchHf() {
   var query = hfSearchInput.value.trim();
   hfResultsEl.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;opacity:.5;"><i class="codicon codicon-loading codicon-modifier-spin"></i> Buscando…</div>';
-  vscode.postMessage({ type: 'searchHfHub', query: query });
+  vscode.postMessage({ type: 'searchHfHub', query: query, filter: hfCurrentFmt });
 }
 
-function renderHfResults(models, error) {
+function renderHfResults(models, error, filter) {
   hfResultsEl.innerHTML = '';
   if (error) {
     hfResultsEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--vscode-errorForeground);font-size:12px;"><i class="codicon codicon-warning"></i> ' + esc(error) + '</div>';
@@ -711,6 +725,7 @@ function renderHfResults(models, error) {
     hfResultsEl.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;opacity:.5;font-style:italic;">Sin resultados. Prueba con otro término.</div>';
     return;
   }
+  var isGguf = filter === 'gguf' || hfCurrentFmt === 'gguf';
   models.forEach(function(m) {
     var row = document.createElement('div');
     row.className = 'hf-model-row';
@@ -719,14 +734,74 @@ function renderHfResults(models, error) {
     var tag = m.pipeline_tag || '';
     var meta = [dlStr, tag].filter(Boolean).join(' · ');
     var safeId = m.modelId.replace(/'/g, '');
+    var actionBtn = isGguf
+      ? '<button class="hf-dl-btn hf-dl-copy" onclick="listGgufFiles(\'' + safeId + '\',this)">📂 Ver archivos</button>'
+      : '<button class="hf-dl-btn" onclick="downloadHfModel(\'' + safeId + '\',this)">⬇ Descargar</button>';
     row.innerHTML =
       '<div class="hf-model-info">' +
         '<div class="hf-model-name" title="' + esc(m.modelId) + '">' + esc(m.modelId) + '</div>' +
         (meta ? '<div class="hf-model-meta">' + esc(meta) + '</div>' : '') +
       '</div>' +
-      '<button class="hf-dl-btn" onclick="downloadHfModel(\'' + safeId + '\',this)">⬇ Descargar</button>';
+      actionBtn;
     hfResultsEl.appendChild(row);
   });
+}
+
+function listGgufFiles(repoId, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i>';
+  vscode.postMessage({ type: 'listGgufFiles', repoId: repoId });
+}
+
+function renderGgufFileList(repoId, files, error) {
+  // Find the row for this repo and inject file list below it
+  var rows = hfResultsEl.querySelectorAll('.hf-model-row');
+  var targetRow = null;
+  rows.forEach(function(r) {
+    var nameEl = r.querySelector('.hf-model-name');
+    if (nameEl && nameEl.title === repoId) targetRow = r;
+  });
+
+  // Re-enable button
+  if (targetRow) {
+    var btn = targetRow.querySelector('.hf-dl-btn');
+    if (btn) { btn.disabled = false; btn.innerHTML = '📂 Ver archivos'; }
+  }
+
+  if (error || !files || files.length === 0) {
+    var msg = error || 'No se encontraron archivos .gguf en este repositorio.';
+    if (targetRow) {
+      var errDiv = document.createElement('div');
+      errDiv.style.cssText = 'font-size:11px;color:var(--vscode-errorForeground);padding:4px 8px;';
+      errDiv.textContent = msg;
+      targetRow.appendChild(errDiv);
+    }
+    return;
+  }
+
+  // Remove existing file list if any
+  var existing = targetRow ? targetRow.querySelector('.gguf-file-list') : null;
+  if (existing) { existing.remove(); return; } // toggle off
+
+  var list = document.createElement('div');
+  list.className = 'gguf-file-list';
+  files.forEach(function(filename) {
+    var item = document.createElement('div');
+    item.className = 'gguf-file-item';
+    var safeRepo = repoId.replace(/'/g, '');
+    var safeFile = filename.replace(/'/g, '');
+    item.innerHTML =
+      '<span class="gguf-file-name" title="' + esc(filename) + '">' + esc(filename) + '</span>' +
+      '<button class="hf-dl-btn" style="font-size:10px;padding:2px 8px;" onclick="downloadGgufFile(\'' + safeRepo + '\',\'' + safeFile + '\',this)">⬇</button>';
+    list.appendChild(item);
+  });
+  if (targetRow) targetRow.appendChild(list);
+}
+
+function downloadGgufFile(repoId, filename, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<i class="codicon codicon-loading codicon-modifier-spin"></i>';
+  vscode.postMessage({ type: 'downloadModel', model: repoId + '/' + filename, isGguf: true, filename: filename });
 }
 
 function downloadHfModel(modelId, btn) {
@@ -1447,7 +1522,11 @@ window.addEventListener('message', function(event) {
     case 'modelUnloaded': break;
 
     case 'hfResults':
-      renderHfResults(d.models, d.error);
+      renderHfResults(d.models, d.error, d.filter);
+      break;
+
+    case 'ggufFileList':
+      renderGgufFileList(d.repoId, d.files, d.error);
       break;
 
     case 'systemInfo':

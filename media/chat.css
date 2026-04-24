@@ -552,6 +552,31 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
 #hf-tab-recommended{padding:0 12px 8px;}
 #hf-tab-search{padding:0 12px 8px;}
 
+/* ── ONNX/GGUF format toggle ──────────────────────────────────── */
+#hf-format-toggle{display:flex;gap:6px;padding:0 0 10px;}
+.hf-fmt-btn{
+  background:none;border:1px solid var(--vscode-panel-border);border-radius:5px;
+  color:var(--vscode-foreground);cursor:pointer;font-size:11px;font-weight:600;
+  padding:4px 12px;opacity:.55;
+}
+.hf-fmt-btn.active{opacity:1;background:var(--vscode-button-secondaryBackground);border-color:var(--vscode-focusBorder,#4fc3f7);}
+.hf-fmt-btn:hover:not(.active){opacity:.85;}
+.hf-fmt-hint{font-weight:400;opacity:.7;margin-left:4px;}
+
+/* ── GGUF file list ───────────────────────────────────────────── */
+.gguf-file-list{
+  width:100%;margin-top:6px;border-top:1px solid var(--vscode-panel-border);
+  padding-top:6px;display:flex;flex-direction:column;gap:4px;
+}
+.gguf-file-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:3px 0;
+}
+.gguf-file-name{
+  font-size:10px;font-family:var(--vscode-editor-font-family);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;opacity:.85;
+}
+
 /* ── RAM badge ────────────────────────────────────────────────── */
 .ram-detected{
   display:inline-block;font-size:11px;padding:4px 10px;border-radius:5px;margin-bottom:10px;
