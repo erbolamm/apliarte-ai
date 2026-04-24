@@ -9,7 +9,7 @@ export interface QuickAction {
 }
 
 export const QUICK_ACTIONS: QuickAction[] = [
-  {
+  { 
     id: 'explain',
     label: 'Explicar código',
     icon: 'light-bulb',
