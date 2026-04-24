@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.9.5] - 2026-04-24
+
+### Added
+- **GGUF model search**: toggle ONNX/GGUF en el buscador de HuggingFace. Modo GGUF lista los archivos `.gguf` del repo y permite descargar el cuant específico directamente
+- **Inline completion (Tab autocomplete)**: `vscode.languages.registerInlineCompletionItemProvider` — completado inline en el editor. FIM format para Qwen2.5-Coder. Solo modo Remote. Activar con `apliarteAi.inlineCompletion: true`
+- **HuggingFace token**: setting `apliarteAi.huggingfaceToken` para descargar modelos gated. Se inyecta como `env.accessToken` en transformers.js
+
+### Fixed
+- `onnx-community/Qwen2.5-Coder-7B-Instruct` eliminado del catálogo de recomendados — el repo no existe en HuggingFace (404). Para 7B+ usar Ollama en modo Remote
+- Error "Unauthorized" al descargar modelos ahora muestra instrucciones claras en 3 pasos
+- MCP badges hacen wrap a la línea siguiente cuando no caben en el toolbar (flex-wrap)
+
+### Changed
+- Landing page `docs/index.html` actualizada a v0.9.5 con screenshots, features nuevas y sección de valoraciones
+- Promo assets añadidos al repo (`promo/`)
+- Settings panel limpiado: eliminados campos duplicados sin handler (LM Studio/Ollama/Agent endpoints, botón Guardar muerto)
+
 ## [0.9.4] - 2026-04-22
 
 ### Changed
