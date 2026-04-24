@@ -22,3 +22,5 @@ SCR-*.png
 *.png
 !icon.png
 !media/**
+promo/**
+media/screenshots/**
