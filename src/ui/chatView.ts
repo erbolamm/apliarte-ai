@@ -1005,10 +1005,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       await this._refreshModels();
       await this._sendConnectionStatus();
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Error descargando modelo';
+      let msg = error instanceof Error ? error.message : 'Error descargando modelo';
+      if (msg.toLowerCase().includes('unauthorized') || msg.includes('401') || msg.includes('403')) {
+        msg = `Acceso denegado al modelo "${modelId}". Este modelo requiere autenticación en HuggingFace.\n\n` +
+          `1. Crea un token en huggingface.co/settings/tokens\n` +
+          `2. Acepta las condiciones del modelo en su página de HuggingFace\n` +
+          `3. Añade el token en VS Code Settings → apliarteAi.huggingfaceToken`;
+      }
       logger.error(`_downloadLocalModel: ${msg}`);
       this._post({ type: 'downloadError', text: msg, model: modelId });
-      // Si las deps fallaron, volvemos a remote para no quedar en estado roto
       if (!areDepsInstalled()) this._provider = 'remote';
     }
   }

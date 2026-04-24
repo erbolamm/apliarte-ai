@@ -8,7 +8,7 @@ import { ChatViewProvider } from './ui/chatView';
 import { WorkspaceTreeProvider } from './ui/workspaceView';
 import { QUICK_ACTIONS, executeQuickAction } from './ui/quickActions';
 import { showModelRecommendations } from './core/modelRecommender';
-import { setDepsDirectory, setModelsDirectory, scanModelsDir } from './core/localInference';
+import { setDepsDirectory, setModelsDirectory, scanModelsDir, setHfToken } from './core/localInference';
 import { setGgufDepsDirectory } from './core/ggufInference';
 import { indexWorkspace } from './core/agentService';
 import { collectWorkspaceFiles } from './tools/executor';
@@ -34,9 +34,16 @@ export function activate(context: vscode.ExtensionContext): void {
   };
   syncModelsDir();
 
+  const syncHfToken = (): void => {
+    const token = vscode.workspace.getConfiguration('apliarteAi').get<string>('huggingfaceToken', '');
+    setHfToken(token || null);
+  };
+  syncHfToken();
+
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('apliarteAi.modelsDir')) syncModelsDir();
+      if (e.affectsConfiguration('apliarteAi.huggingfaceToken')) syncHfToken();
     })
   );
 

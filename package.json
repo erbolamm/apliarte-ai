@@ -282,6 +282,11 @@
           "default": "",
           "description": "API key del servidor de agente remoto. Se guarda en la configuración global de VS Code."
         },
+        "apliarteAi.huggingfaceToken": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Token de HuggingFace para descargar modelos privados o con acceso restringido (gated). Consíguelo en [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens). Solo necesario si ves error 'Unauthorized' al descargar un modelo."
+        },
         "apliarteAi.inlineCompletion": {
           "type": "boolean",
           "default": false,

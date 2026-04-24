@@ -16,6 +16,11 @@ let _currentModelId: string | null = null;
 let _loading = false;
 let _depsDir: string | null = null;
 let _modelsDir: string | null = null;
+let _hfToken: string | null = null;
+
+export function setHfToken(token: string | null): void {
+  _hfToken = token && token.trim() ? token.trim() : null;
+}
 
 export interface LocalModelEntry {
   id: string;
@@ -188,6 +193,15 @@ export async function loadModel(
       await _generator.dispose?.();
       _generator = null;
       _currentModelId = null;
+    }
+
+    // Inject HF token for gated models
+    const transformersPath = join(getDepsDir(), 'node_modules', '@huggingface', 'transformers', 'dist', 'transformers.node.cjs');
+    const transformersMod = require(transformersPath);
+    if (_hfToken && transformersMod.env) {
+      transformersMod.env.accessToken = _hfToken;
+    } else if (transformersMod.env) {
+      transformersMod.env.accessToken = undefined;
     }
 
     const pipelineOpts: Record<string, unknown> = {
