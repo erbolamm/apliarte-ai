@@ -26,6 +26,7 @@
   <a href="https://erbolamm.github.io/apliarte-ai/">🌐 Web</a> · 
   <a href="https://marketplace.visualstudio.com/items?itemName=apliarte.apliarte-ai">VS Marketplace</a> · 
   <a href="https://open-vsx.org/extension/apliarte/apliarte-ai">Open VSX (Cursor/Windsurf/Antigravity)</a>
+  <a href="https://discord.gg/GEs4keWENN">Discord</a>
 </p>
 
 <p align="center">
