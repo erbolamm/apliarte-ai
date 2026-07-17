@@ -64,20 +64,26 @@ export async function setupContinue(
   const config = vscode.workspace.getConfiguration('apliarteAi');
   const preset = config.get<PresetId>('preset', 'minimal');
 
-  // Crear directorio de rules si no existe
-  if (!fs.existsSync(rulesDir)) {
-    fs.mkdirSync(rulesDir, { recursive: true });
+  try {
+    // Crear directorio de rules si no existe
+    if (!fs.existsSync(rulesDir)) {
+      fs.mkdirSync(rulesDir, { recursive: true });
+    }
+
+    // Escribir la rule principal
+    const rules = getRulesForPreset(preset);
+    const rulePath = path.join(rulesDir, 'apliarte-ai.md');
+    fs.writeFileSync(rulePath, rules, 'utf-8');
+
+    logger.info(`Rule escrita en ${rulePath} (preset: ${preset})`);
+    logger.info(`Provider: ${provider.name}, Modelo: ${model}`);
+
+    vscode.window.showInformationMessage(
+      `ApliArte AI configurado: ${provider.name} / ${model} / preset ${preset}`
+    );
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`Error setupContinue: ${msg}`);
+    vscode.window.showErrorMessage(`Error al guardar configuración de Continue: ${msg}`);
   }
-
-  // Escribir la rule principal
-  const rules = getRulesForPreset(preset);
-  const rulePath = path.join(rulesDir, 'apliarte-ai.md');
-  fs.writeFileSync(rulePath, rules, 'utf-8');
-
-  logger.info(`Rule escrita en ${rulePath} (preset: ${preset})`);
-  logger.info(`Provider: ${provider.name}, Modelo: ${model}`);
-
-  vscode.window.showInformationMessage(
-    `ApliArte AI configurado: ${provider.name} / ${model} / preset ${preset}`
-  );
 }

@@ -93,7 +93,7 @@ class TestableServerManager extends McpServerManager {
 }
 
 const HTTP_CFG: McpServerConfig = { transport: 'http', url: 'http://localhost:9999/mcp' };
-const STDIO_CFG: McpServerConfig = { transport: 'stdio', command: 'npx', args: ['-y', 'fake-mcp'] };
+const STDIO_CFG: McpServerConfig = { transport: 'stdio', command: 'pnpm', args: ['dlx', 'fake-mcp'] };
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 

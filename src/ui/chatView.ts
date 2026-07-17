@@ -67,6 +67,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this._store = new ConversationStore(globalState);
     this._tpsBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
     this._tpsBar.tooltip = 'ApliArte AI — velocidad de inferencia local';
+
+    // Load persisted state
+    this._provider = globalState.get<'remote' | 'local' | 'agent'>('activeProvider', 'remote');
+    this._currentModel = globalState.get<string>('activeModel');
+    this._ggufModelPath = globalState.get<string>('ggufModelPath');
+
     // Migrate legacy flat history if it exists
     this._migrateLegacyHistory();
   }
@@ -109,195 +115,204 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
 
     webviewView.webview.onDidReceiveMessage(async (data) => {
-      switch (data.type) {
-        // ── Init ──────────────────────────────────────────────────────────
-        case 'webviewReady':
-          await this._onWebviewReady();
-          break;
+      try {
+        switch (data.type) {
+          // ── Init ──────────────────────────────────────────────────────────
+          case 'webviewReady':
+            await this._onWebviewReady();
+            break;
 
-        // ── Chat ──────────────────────────────────────────────────────────
-        case 'sendMessage':
-          await this._handleUserMessage(data.text);
-          break;
-        case 'stopGeneration':
-          this._abortController?.abort();
-          break;
+          // ── Chat ──────────────────────────────────────────────────────────
+          case 'sendMessage':
+            await this._handleUserMessage(data.text);
+            break;
+          case 'stopGeneration':
+            this._abortController?.abort();
+            break;
 
-        // ── Conversations ─────────────────────────────────────────────────
-        case 'newConversation':
-          await this._newConversation();
-          break;
-        case 'loadConversation':
-          await this._loadConversation(data.id);
-          break;
-        case 'renameConversation':
-          await this._renameConversation(data.id, data.title);
-          break;
-        case 'deleteConversation':
-          await this._deleteConversation(data.id);
-          break;
-        case 'clearHistory':
-          await this._clearCurrentConversation();
-          break;
-        case 'requestConversations':
-          this._sendConversationList();
-          break;
+          // ── Conversations ─────────────────────────────────────────────────
+          case 'newConversation':
+            await this._newConversation();
+            break;
+          case 'loadConversation':
+            await this._loadConversation(data.id);
+            break;
+          case 'renameConversation':
+            await this._renameConversation(data.id, data.title);
+            break;
+          case 'deleteConversation':
+            await this._deleteConversation(data.id);
+            break;
+          case 'clearHistory':
+            await this._clearCurrentConversation();
+            break;
+          case 'requestConversations':
+            this._sendConversationList();
+            break;
 
-        // ── Export ────────────────────────────────────────────────────────
-        case 'exportChat':
-          await this._exportCurrentChat();
-          break;
-        case 'exportConversation':
-          await this._exportConversation(data.id);
-          break;
-        case 'exportAll':
-          await this._exportAllConversations();
-          break;
+          // ── Export ────────────────────────────────────────────────────────
+          case 'exportChat':
+            await this._exportCurrentChat();
+            break;
+          case 'exportConversation':
+            await this._exportConversation(data.id);
+            break;
+          case 'exportAll':
+            await this._exportAllConversations();
+            break;
 
-        // ── Models ────────────────────────────────────────────────────────
-        case 'requestModels':
-          await this._refreshModels();
-          break;
-        case 'setModel':
-          this._currentModel = data.model;
-          break;
-        case 'setProvider':
-          await this._setProvider(data.provider);
-          break;
-        case 'downloadModel':
-          await this._downloadLocalModel(data.model);
-          break;
-        case 'unloadModel':
-          await unloadModel();
-          await unloadGgufModel();
-          this._ggufModelPath = undefined;
-          this._post({ type: 'modelUnloaded' });
-          break;
-        case 'loadGgufModel':
-          await this._loadGgufModelHandler(data.path as string);
-          break;
+          // ── Models ────────────────────────────────────────────────────────
+          case 'requestModels':
+            await this._refreshModels();
+            break;
+          case 'setModel':
+            this._currentModel = data.model;
+            await this._globalState.update('activeModel', data.model);
+            break;
+          case 'setProvider':
+            await this._setProvider(data.provider);
+            break;
+          case 'downloadModel':
+            await this._downloadLocalModel(data.model);
+            break;
+          case 'unloadModel':
+            await unloadModel();
+            await unloadGgufModel();
+            this._ggufModelPath = undefined;
+            await this._globalState.update('ggufModelPath', undefined);
+            await this._globalState.update('activeModel', undefined);
+            this._post({ type: 'modelUnloaded' });
+            break;
+          case 'loadGgufModel':
+            await this._loadGgufModelHandler(data.path as string);
+            break;
 
-        // ── Settings ──────────────────────────────────────────────────────
-        case 'getSettings':
-          this._sendSettings();
-          break;
-        case 'saveSettings':
-          await this._saveSettings(data.settings);
-          break;
-        case 'openVscodeSettings':
-          vscode.commands.executeCommand('workbench.action.openSettings', 'apliarteAi');
-          break;
+          // ── Settings ──────────────────────────────────────────────────────
+          case 'getSettings':
+            this._sendSettings();
+            break;
+          case 'saveSettings':
+            await this._saveSettings(data.settings);
+            break;
+          case 'openVscodeSettings':
+            vscode.commands.executeCommand('workbench.action.openSettings', 'apliarteAi');
+            break;
 
-        case 'openUrl':
-          if (data.url && typeof data.url === 'string') {
-            void vscode.env.openExternal(vscode.Uri.parse(data.url));
+          case 'openUrl':
+            if (data.url && typeof data.url === 'string') {
+              void vscode.env.openExternal(vscode.Uri.parse(data.url));
+            }
+            break;
+
+          case 'chooseModelsDir':
+            void vscode.commands.executeCommand('apliarteAi.chooseModelsDir');
+            break;
+
+          case 'searchHfHub':
+            await this._searchHuggingFaceHub(
+              typeof data.query === 'string' ? data.query : '',
+              data.filter === 'gguf' ? 'gguf' : 'onnx',
+            );
+            break;
+
+          case 'listGgufFiles':
+            await this._listGgufFiles(typeof data.repoId === 'string' ? data.repoId : '');
+            break;
+
+          case 'addMcpServer': {
+            const { name: srvName, config: srvConfig } = data as { name: string; config: import('../mcp/types').McpServerConfig };
+            if (!srvName) break;
+            const cfg2 = vscode.workspace.getConfiguration('apliarteAi');
+            const existingServers = { ...cfg2.get<Record<string, import('../mcp/types').McpServerConfig>>('mcpServers', {}) };
+            existingServers[srvName] = srvConfig;
+            await cfg2.update('mcpServers', existingServers, vscode.ConfigurationTarget.Global);
+            vscode.window.showInformationMessage(`Servidor MCP "${srvName}" agregado. Conectando…`);
+            break;
           }
-          break;
 
-        case 'chooseModelsDir':
-          void vscode.commands.executeCommand('apliarteAi.chooseModelsDir');
-          break;
-
-        case 'searchHfHub':
-          await this._searchHuggingFaceHub(
-            typeof data.query === 'string' ? data.query : '',
-            data.filter === 'gguf' ? 'gguf' : 'onnx',
-          );
-          break;
-
-        case 'listGgufFiles':
-          await this._listGgufFiles(typeof data.repoId === 'string' ? data.repoId : '');
-          break;
-
-        case 'addMcpServer': {
-          const { name: srvName, config: srvConfig } = data as { name: string; config: import('../mcp/types').McpServerConfig };
-          if (!srvName) break;
-          const cfg2 = vscode.workspace.getConfiguration('apliarteAi');
-          const existingServers = { ...cfg2.get<Record<string, import('../mcp/types').McpServerConfig>>('mcpServers', {}) };
-          existingServers[srvName] = srvConfig;
-          await cfg2.update('mcpServers', existingServers, vscode.ConfigurationTarget.Global);
-          vscode.window.showInformationMessage(`Servidor MCP "${srvName}" agregado. Conectando…`);
-          break;
-        }
-
-        case 'chooseMcpFolder': {
-          const result = await vscode.window.showOpenDialog({
-            canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
-            openLabel: 'Usar esta carpeta para MCP Filesystem',
-            title: 'Carpeta para el servidor MCP Filesystem',
-          });
-          if (result?.[0]) {
-            const folderPath = result[0].fsPath;
-            const cfg3 = vscode.workspace.getConfiguration('apliarteAi');
-            const existingServers2 = { ...cfg3.get<Record<string, import('../mcp/types').McpServerConfig>>('mcpServers', {}) };
-            existingServers2['filesystem'] = { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-filesystem', folderPath] };
-            await cfg3.update('mcpServers', existingServers2, vscode.ConfigurationTarget.Global);
-            vscode.window.showInformationMessage(`MCP Filesystem configurado: ${folderPath}`);
+          case 'chooseMcpFolder': {
+            const result = await vscode.window.showOpenDialog({
+              canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
+              openLabel: 'Usar esta carpeta para MCP Filesystem',
+              title: 'Carpeta para el servidor MCP Filesystem',
+            });
+            if (result?.[0]) {
+              const folderPath = result[0].fsPath;
+              const cfg3 = vscode.workspace.getConfiguration('apliarteAi');
+              const existingServers2 = { ...cfg3.get<Record<string, import('../mcp/types').McpServerConfig>>('mcpServers', {}) };
+              existingServers2['filesystem'] = { transport: 'stdio', command: 'pnpm', args: ['dlx', '@modelcontextprotocol/server-filesystem', folderPath] };
+              await cfg3.update('mcpServers', existingServers2, vscode.ConfigurationTarget.Global);
+              vscode.window.showInformationMessage(`MCP Filesystem configurado: ${folderPath}`);
+            }
+            break;
           }
-          break;
-        }
 
-        // ── MCP ──────────────────────────────────────────────────────────
-        case 'requestMcpStatus':
-          this._sendMcpStatus();
-          break;
+          // ── MCP ──────────────────────────────────────────────────────────
+          case 'requestMcpStatus':
+            this._sendMcpStatus();
+            break;
 
-        case 'attachMcpResource': {
-          const reg = getMcpResourceRegistry();
-          const { server, uri, name: resName } = data as { server: string; uri: string; name: string };
-          try {
-            const contents = await reg.readResource(server, uri);
-            const text = contents.map((c) => c.text ?? '').filter(Boolean).join('\n');
-            if (text) this.attachContext(resName, text);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Error leyendo recurso MCP: ${msg}`);
+          case 'attachMcpResource': {
+            const reg = getMcpResourceRegistry();
+            const { server, uri, name: resName } = data as { server: string; uri: string; name: string };
+            try {
+              const contents = await reg.readResource(server, uri);
+              const text = contents.map((c) => c.text ?? '').filter(Boolean).join('\n');
+              if (text) this.attachContext(resName, text);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              vscode.window.showErrorMessage(`Error leyendo recurso MCP: ${msg}`);
+            }
+            break;
           }
-          break;
-        }
 
-        case 'invokeMcpPrompt': {
-          const reg = getMcpResourceRegistry();
-          const { server, promptName, args: promptArgs } = data as { server: string; promptName: string; args?: Record<string, string> };
-          try {
-            const result = await reg.getPrompt(server, promptName, promptArgs);
-            const text = result.messages
-              .map((m) => (m.content.type === 'text' ? m.content.text : ''))
-              .filter(Boolean)
-              .join('\n\n');
-            if (text) this.attachContext(`Prompt: ${promptName}`, text);
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Error obteniendo prompt MCP: ${msg}`);
+          case 'invokeMcpPrompt': {
+            const reg = getMcpResourceRegistry();
+            const { server, promptName, args: promptArgs } = data as { server: string; promptName: string; args?: Record<string, string> };
+            try {
+              const result = await reg.getPrompt(server, promptName, promptArgs);
+              const text = result.messages
+                .map((m) => (m.content.type === 'text' ? m.content.text : ''))
+                .filter(Boolean)
+                .join('\n\n');
+              if (text) this.attachContext(`Prompt: ${promptName}`, text);
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              vscode.window.showErrorMessage(`Error obteniendo prompt MCP: ${msg}`);
+            }
+            break;
           }
-          break;
+
+          // ── Context ───────────────────────────────────────────────────────
+          case 'insertCode':
+            await this._insertCode(data.code);
+            break;
+          case 'applyDiff':
+            await this._applyDiff(data.code);
+            break;
+          case 'requestAlternative':
+            await this._generateAlternative(data.code as string, data.blockIdx as number);
+            break;
+          case 'requestContext':
+            await this._attachEditorContext(data.scope);
+            break;
+          case 'removeContext':
+            this._contextText = undefined;
+            this._contextName = undefined;
+            break;
+
+          // ── Misc ──────────────────────────────────────────────────────────
+          case 'setTemperature':
+            this._temperature = data.value;
+            break;
+          case 'checkConnection':
+            await this._sendConnectionStatus();
+            break;
         }
-
-        // ── Context ───────────────────────────────────────────────────────
-        case 'insertCode':
-          await this._insertCode(data.code);
-          break;
-        case 'applyDiff':
-          await this._applyDiff(data.code);
-          break;
-        case 'requestAlternative':
-          await this._generateAlternative(data.code as string, data.blockIdx as number);
-          break;
-        case 'requestContext':
-          await this._attachEditorContext(data.scope);
-          break;
-        case 'removeContext':
-          this._contextText = undefined;
-          this._contextName = undefined;
-          break;
-
-        // ── Misc ──────────────────────────────────────────────────────────
-        case 'setTemperature':
-          this._temperature = data.value;
-          break;
-        case 'checkConnection':
-          await this._sendConnectionStatus();
-          break;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error(`Error handling webview message of type "${data?.type}": ${msg}`);
+        vscode.window.showErrorMessage(`Error interno en ApliArte AI: ${msg}`);
       }
     });
   }
@@ -479,7 +494,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   private async _setProvider(provider: 'remote' | 'local' | 'agent'): Promise<void> {
     this._provider = provider;
+    await this._globalState.update('activeProvider', provider);
     this._currentModel = undefined;
+    await this._globalState.update('activeModel', undefined);
     this._remoteEndpoint = undefined;
     // No auto-descargamos el modelo al cambiar de proveedor — el usuario
     // lo hace explícitamente desde el botón o el selector de modelos.
@@ -916,8 +933,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     if (this._remoteEndpoint) return this._remoteEndpoint;
 
     const config    = vscode.workspace.getConfiguration('apliarteAi');
-    const lmstudio  = config.get<string>('lmstudioEndpoint', 'http://localhost:1234/v1');
-    const ollama    = config.get<string>('ollamaEndpoint', 'http://localhost:11434');
+    const lmstudioRaw  = config.get<unknown>('lmstudioEndpoint', 'http://localhost:1234/v1');
+    const ollamaRaw    = config.get<unknown>('ollamaEndpoint', 'http://localhost:11434');
+
+    const lmstudio = typeof lmstudioRaw === 'string' ? lmstudioRaw.trim() : 'http://localhost:1234/v1';
+    const ollama   = typeof ollamaRaw === 'string' ? ollamaRaw.trim() : 'http://localhost:11434';
     const ollamaV1  = `${ollama.replace(/\/+$/, '')}/v1`;
 
     const results = await Promise.allSettled([
@@ -956,7 +976,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         this._post({ type: 'downloadProgress', status: 'progress', model: filePath, progress: pct, file: 'Cargando modelo…' });
       });
       this._ggufModelPath = filePath;
+      await this._globalState.update('ggufModelPath', filePath);
       this._currentModel = filePath.split('/').pop() ?? filePath;
+      await this._globalState.update('activeModel', this._currentModel);
       this._post({ type: 'downloadComplete', model: filePath });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -1001,6 +1023,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       });
 
       this._currentModel = modelId;
+      await this._globalState.update('activeModel', modelId);
       this._post({ type: 'downloadComplete', model: modelId });
       await this._refreshModels();
       await this._sendConnectionStatus();
@@ -1062,10 +1085,14 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   }
 
   public async refreshAfterSettingsChange(): Promise<void> {
-    this._sendSettings();
-    if (this._provider === 'local') {
-      await this._refreshModels();
-      await this._sendConnectionStatus();
+    try {
+      this._sendSettings();
+      if (this._provider === 'local') {
+        await this._refreshModels();
+        await this._sendConnectionStatus();
+      }
+    } catch (err) {
+      logger.error(`Error refreshAfterSettingsChange: ${err instanceof Error ? err.message : err}`);
     }
   }
 

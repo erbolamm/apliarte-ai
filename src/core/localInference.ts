@@ -116,7 +116,7 @@ export async function installDeps(
 
   // Run npm install
   await new Promise<void>((resolve, reject) => {
-    const child = execFile('npm', ['install', '--production'], {
+    const child = execFile('pnpm', ['install', '--prod'], {
       cwd: dir,
       env: { ...process.env, NODE_ENV: 'production' },
       maxBuffer: 10 * 1024 * 1024,

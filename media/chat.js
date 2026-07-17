@@ -4,6 +4,14 @@
 var vscode = acquireVsCodeApi();
 var msgs    = document.getElementById('messages');
 var input   = document.getElementById('input');
+
+// Restore input draft from state
+(function() {
+  var state = vscode.getState() || {};
+  if (state.inputText && input) {
+    input.value = state.inputText;
+  }
+})();
 var sendB   = document.getElementById('send-btn');
 var stopB   = document.getElementById('stop-btn');
 var clearB  = document.getElementById('clear-btn');
@@ -387,11 +395,11 @@ function copyMovePrompt() {
 
 /* ── MCP quick setup ───────────────────────────────────────── */
 var MCP_PRESETS = {
-  memory: { name: 'memory', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-memory'] } },
-  github: { name: 'github', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' } } },
-  postgres: { name: 'postgres', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-postgres'], env: { POSTGRES_CONNECTION_STRING: 'postgresql://user:pass@localhost/db' } } },
-  sqlite: { name: 'sqlite', config: { transport: 'stdio', command: 'npx', args: ['-y', '@modelcontextprotocol/server-sqlite', '--db-path', './db.sqlite'] } },
-  playwright: { name: 'playwright', config: { transport: 'stdio', command: 'npx', args: ['-y', '@playwright/mcp'] } },
+  memory: { name: 'memory', config: { transport: 'stdio', command: 'pnpm', args: ['dlx', '@modelcontextprotocol/server-memory'] } },
+  github: { name: 'github', config: { transport: 'stdio', command: 'pnpm', args: ['dlx', '@modelcontextprotocol/server-github'], env: { GITHUB_PERSONAL_ACCESS_TOKEN: '' } } },
+  postgres: { name: 'postgres', config: { transport: 'stdio', command: 'pnpm', args: ['dlx', '@modelcontextprotocol/server-postgres'], env: { POSTGRES_CONNECTION_STRING: 'postgresql://user:pass@localhost/db' } } },
+  sqlite: { name: 'sqlite', config: { transport: 'stdio', command: 'pnpm', args: ['dlx', '@modelcontextprotocol/server-sqlite', '--db-path', './db.sqlite'] } },
+  playwright: { name: 'playwright', config: { transport: 'stdio', command: 'pnpm', args: ['dlx', '@playwright/mcp'] } },
 };
 
 var MCP_STACKS = {
@@ -1181,6 +1189,11 @@ function send() {
   input.value = '';
   input.style.height = 'auto';
   updateWC();
+
+  var currentState = vscode.getState() || {};
+  currentState.inputText = '';
+  vscode.setState(currentState);
+
   vscode.postMessage({ type: 'sendMessage', text: text });
 }
 
@@ -1192,6 +1205,10 @@ input.addEventListener('input', function() {
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 150) + 'px';
   updateWC();
+
+  var currentState = vscode.getState() || {};
+  currentState.inputText = input.value;
+  vscode.setState(currentState);
 });
 stopB.addEventListener('click', function() { vscode.postMessage({ type: 'stopGeneration' }); });
 attB.addEventListener('click', function() { reqCtx('file'); });
@@ -1474,6 +1491,7 @@ window.addEventListener('message', function(event) {
 
     case 'connectionStatus':
       currentProvider = d.provider || currentProvider;
+      if (pSel) pSel.value = currentProvider;
       updateFolderBtnVisibility(currentProvider);
       if (d.provider === 'agent') {
         dot.classList.toggle('on', d.connected); stTxt.textContent = d.connected ? 'Agent' : 'Agent offline';
@@ -1564,3 +1582,8 @@ window.addEventListener('message', function(event) {
 });
 
 input.focus();
+updateWC();
+if (input.value) {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 150) + 'px';
+}

@@ -29,13 +29,15 @@ export function activate(context: vscode.ExtensionContext): void {
   setGgufDepsDirectory(join(context.globalStorageUri.fsPath, 'deps-gguf'));
 
   const syncModelsDir = (): void => {
-    const dir = vscode.workspace.getConfiguration('apliarteAi').get<string>('modelsDir', '').trim();
+    const rawDir = vscode.workspace.getConfiguration('apliarteAi').get<unknown>('modelsDir', '');
+    const dir = typeof rawDir === 'string' ? rawDir.trim() : '';
     setModelsDirectory(dir);
   };
   syncModelsDir();
 
   const syncHfToken = (): void => {
-    const token = vscode.workspace.getConfiguration('apliarteAi').get<string>('huggingfaceToken', '');
+    const rawToken = vscode.workspace.getConfiguration('apliarteAi').get<unknown>('huggingfaceToken', '');
+    const token = typeof rawToken === 'string' ? rawToken.trim() : '';
     setHfToken(token || null);
   };
   syncHfToken();
@@ -56,7 +58,8 @@ export function activate(context: vscode.ExtensionContext): void {
   if (isFirstRun || isUpgrade) {
     void context.globalState.update('installedVersion', currentVersion);
     const cfg = vscode.workspace.getConfiguration('apliarteAi');
-    const currentModelsDir = cfg.get<string>('modelsDir', '').trim();
+    const rawModelsDir = cfg.get<unknown>('modelsDir', '');
+    const currentModelsDir = typeof rawModelsDir === 'string' ? rawModelsDir.trim() : '';
 
     const label = currentModelsDir || context.globalStorageUri.fsPath;
     const title = isFirstRun
@@ -95,7 +98,8 @@ export function activate(context: vscode.ExtensionContext): void {
         openLabel: 'Usar esta carpeta para modelos',
         title: 'Elegir carpeta de modelos de IA',
         defaultUri: (() => {
-          const current = cfg.get<string>('modelsDir', '').trim();
+          const rawCurrent = cfg.get<unknown>('modelsDir', '');
+          const current = typeof rawCurrent === 'string' ? rawCurrent.trim() : '';
           return current ? vscode.Uri.file(current) : context.globalStorageUri;
         })(),
       });
@@ -124,7 +128,8 @@ export function activate(context: vscode.ExtensionContext): void {
     // `engram` entry in mcpServers, inject one automatically. Keeps v0.6.x
     // configs working without manual migration.
     if (!configs.engram) {
-      const engramUrl = cfg.get<string>('engramEndpoint', '').trim();
+      const rawUrl = cfg.get<unknown>('engramEndpoint', '');
+      const engramUrl = typeof rawUrl === 'string' ? rawUrl.trim() : '';
       if (engramUrl) {
         configs.engram = { transport: 'http', url: engramUrl };
       }
@@ -381,24 +386,24 @@ export function activate(context: vscode.ExtensionContext): void {
 
       const workspaceId = Buffer.from(folders[0].uri.fsPath).toString('base64url').slice(0, 32);
 
-      await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: 'ApliArte AI: Indexando workspace…' },
-        async (progress) => {
-          progress.report({ message: 'Recolectando archivos…' });
-          const files = await collectWorkspaceFiles();
-          progress.report({ message: `Enviando ${files.length} archivos al agente…` });
+      try {
+        await vscode.window.withProgress(
+          { location: vscode.ProgressLocation.Notification, title: 'ApliArte AI: Indexando workspace…' },
+          async (progress) => {
+            progress.report({ message: 'Recolectando archivos…' });
+            const files = await collectWorkspaceFiles();
+            progress.report({ message: `Enviando ${files.length} archivos al agente…` });
 
-          try {
             const result = await indexWorkspace(endpoint, apiKey, workspaceId, files);
             vscode.window.showInformationMessage(
               `Workspace indexado: ${result.indexed} archivos. @codebase listo.`
             );
-          } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            vscode.window.showErrorMessage(`Error indexando: ${msg}`);
           }
-        }
-      );
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(`Error indexando: ${msg}`);
+      }
     })
   );
 

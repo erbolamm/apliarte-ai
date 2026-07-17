@@ -46,7 +46,7 @@ export async function installGgufDeps(onProgress?: (msg: string) => void): Promi
 
   await new Promise<void>((resolve, reject) => {
     const child = execFile(
-      'npm', ['install', '--production'],
+      'pnpm', ['install', '--prod'],
       { cwd: dir, env: { ...process.env, NODE_ENV: 'production' }, maxBuffer: 20 * 1024 * 1024 },
       (error) => {
         if (error) reject(new Error(`npm install falló: ${error.message}`));
