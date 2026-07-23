@@ -1,0 +1,80 @@
+{
+  "es": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "IA local para editores de código",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Privado", "🆓 Gratis", "📡 Offline", "💻 Local"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Conecta herramientas externas vía stdio y HTTP con tool-calling automático" },
+      { "icon": "🧠", "titulo": "Modelos ONNX + GGUF", "desc": "Inferencia local nativa — sin servidor, sin API, sin costes" },
+      { "icon": "📊", "titulo": "Monitor de rendimiento", "desc": "Métricas tokens/segundo en tiempo real con sugerencias automáticas" },
+      { "icon": "⚡", "titulo": "Alternativas de código", "desc": "Genera múltiples soluciones con extractSignatures y análisis semántico" }
+    ]
+  },
+  "en": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "Local AI for code editors",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Private", "🆓 Free", "📡 Offline", "💻 Local"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Connect external tools via stdio and HTTP with automatic tool-calling" },
+      { "icon": "🧠", "titulo": "ONNX + GGUF Models", "desc": "Native local inference — no server, no API, no costs" },
+      { "icon": "📊", "titulo": "Performance Monitor", "desc": "Real-time tokens/second metrics with automatic suggestions" },
+      { "icon": "⚡", "titulo": "Code Alternatives", "desc": "Generate multiple solutions with extractSignatures and semantic analysis" }
+    ]
+  },
+  "pt": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "IA local para editores de código",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Privado", "🆓 Grátis", "📡 Offline", "💻 Local"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Conecte ferramentas externas via stdio e HTTP com tool-calling automático" },
+      { "icon": "🧠", "titulo": "Modelos ONNX + GGUF", "desc": "Inferência local nativa — sem servidor, sem API, sem custos" },
+      { "icon": "📊", "titulo": "Monitor de desempenho", "desc": "Métricas de tokens/segundo em tempo real com sugestões automáticas" },
+      { "icon": "⚡", "titulo": "Alternativas de código", "desc": "Gere múltiplas soluções com extractSignatures e análise semântica" }
+    ]
+  },
+  "fr": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "IA locale pour éditeurs de code",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Privé", "🆓 Gratuit", "📡 Hors ligne", "💻 Local"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Connectez des outils externes via stdio et HTTP avec appel d'outils automatique" },
+      { "icon": "🧠", "titulo": "Modèles ONNX + GGUF", "desc": "Inférence locale native — pas de serveur, pas d'API, aucun coût" },
+      { "icon": "📊", "titulo": "Moniteur de performance", "desc": "Métriques tokens/seconde en temps réel avec suggestions automatiques" },
+      { "icon": "⚡", "titulo": "Alternatives de code", "desc": "Générez plusieurs solutions avec extractSignatures et analyse sémantique" }
+    ]
+  },
+  "de": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "Lokale KI für Code-Editoren",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Privat", "🆓 Kostenlos", "📡 Offline", "💻 Lokal"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Verbinden Sie externe Tools über stdio und HTTP mit automatischem Tool-Calling" },
+      { "icon": "🧠", "titulo": "ONNX + GGUF Modelle", "desc": "Native lokale Inferenz — kein Server, keine API, keine Kosten" },
+      { "icon": "📊", "titulo": "Leistungsmonitor", "desc": "Token/Sekunde-Metriken in Echtzeit mit automatischen Vorschlägen" },
+      { "icon": "⚡", "titulo": "Code-Alternativen", "desc": "Generieren Sie mehrere Lösungen mit extractSignatures und semantischer Analyse" }
+    ]
+  },
+  "it": {
+    "nombre": "ApliArte AI",
+    "version": "v0.9",
+    "descripcion": "IA locale per editor di codice",
+    "url": "erbolamm.github.io/apliarte-ai",
+    "badges": ["🔒 Privato", "🆓 Gratuito", "📡 Offline", "💻 Locale"],
+    "features": [
+      { "icon": "🔌", "titulo": "MCP Client", "desc": "Collega strumenti esterni tramite stdio e HTTP con tool-calling automatico" },
+      { "icon": "🧠", "titulo": "Modelli ONNX + GGUF", "desc": "Inferenza locale nativa — nessun server, nessuna API, nessun costo" },
+      { "icon": "📊", "titulo": "Monitor prestazioni", "desc": "Metriche token/secondo in tempo reale con suggerimenti automatici" },
+      { "icon": "⚡", "titulo": "Alternative di codice", "desc": "Genera più soluzioni con extractSignatures e analisi semantica" }
+    ]
+  }
+}

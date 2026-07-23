@@ -392,7 +392,7 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
   background:var(--vscode-editorWidget-background);
   border:1px solid var(--vscode-panel-border);border-radius:10px;
   width:calc(100% - 32px);max-width:400px;max-height:78vh;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:column;overflow:hidden;
   box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideUp .2s ease;
 }
 #hf-header{
@@ -549,8 +549,9 @@ code.il{background:var(--vscode-textCodeBlock-background);padding:1px 5px;border
 }
 .hf-tab.active{opacity:1;background:var(--vscode-button-secondaryBackground);border-color:var(--vscode-focusBorder,#4fc3f7);}
 .hf-tab:hover:not(.active){opacity:.9;}
-#hf-tab-recommended{padding:0 12px 8px;}
-#hf-tab-search{padding:0 12px 8px;}
+.hf-tab-panel{flex:1;min-height:0;}
+#hf-tab-recommended{padding:0 12px 8px;flex:1;min-height:0;overflow-y:auto;}
+#hf-tab-search{padding:0 12px 8px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
 
 /* ── ONNX/GGUF format toggle ──────────────────────────────────── */
 #hf-format-toggle{display:flex;gap:6px;padding:0 0 10px;}
